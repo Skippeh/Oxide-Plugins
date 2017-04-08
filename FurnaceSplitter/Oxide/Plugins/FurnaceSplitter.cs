@@ -453,7 +453,7 @@ namespace Oxide.Plugins
         {
             var oven = player.inventory.loot?.entitySource as BaseOven;
 
-            if (oven != null && !compatibleOvens.Contains(oven.ShortPrefabName))
+            if (oven != null && compatibleOvens.Contains(oven.ShortPrefabName))
                 queuedUiUpdates.Push(oven);
         }
 
