@@ -110,7 +110,8 @@ namespace Oxide.Plugins
                 { "turnoff", "Turn Off" },
                 { "title", "Furnace Splitter" },
                 { "eta", "ETA" },
-                { "totalstacks", "Total stacks" }
+                { "totalstacks", "Total stacks" },
+                { "trim", "Trim fuel" }
             }, this, "en");
         }
 
@@ -584,6 +585,28 @@ namespace Oxide.Plugins
                     Align = TextAnchor.MiddleCenter,
                     Text = options.Enabled ? lang.GetMessage("turnoff", this, player.UserIDString) : lang.GetMessage("turnon", this, player.UserIDString),
                     Color = toggleButtonTextColor,
+                    FontSize = 11
+                }
+            }, contentPanel);
+
+            // Trim button
+            result.Add(new CuiButton
+            {
+                RectTransform =
+                {
+                    AnchorMin = "0.27 0.4",
+                    AnchorMax = "0.52 0.7"
+                },
+                Button =
+                {
+                    Command = "furnacesplitter.trim",
+                    Color = buttonColor
+                },
+                Text =
+                {
+                    Align = TextAnchor.MiddleCenter,
+                    Text = lang.GetMessage("trim", this, player.UserIDString),
+                    Color = contentColor,
                     FontSize = 11
                 }
             }, contentPanel);
