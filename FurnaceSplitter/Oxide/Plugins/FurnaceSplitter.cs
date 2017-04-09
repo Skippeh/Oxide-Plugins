@@ -392,15 +392,23 @@ namespace Oxide.Plugins
 
             if (neededFuel <= 0)
                 return;
-
+            
             foreach (var fuelItem in playerFuel)
             {
                 if (oven.inventory.CanAcceptItem(fuelItem) != ItemContainer.CanAcceptResult.CanAccept)
                     break;
 
-                var toTake = Math.Min(fuelItem.amount, neededFuel);
-                neededFuel -= toTake;
+                var largestFuelStack = oven.inventory.itemList.Where(item => item.info == oven.fuelType).OrderByDescending(item => item.amount).FirstOrDefault();
+                var toTake = Math.Min(neededFuel, oven.fuelType.stackable - (largestFuelStack?.amount ?? 0));
 
+                if (toTake > fuelItem.amount)
+                    toTake = fuelItem.amount;
+                
+                if (toTake <= 0)
+                    break;
+                
+                neededFuel -= toTake;
+                
                 if (toTake >= fuelItem.amount)
                 {
                     fuelItem.MoveToContainer(oven.inventory);
@@ -411,7 +419,7 @@ namespace Oxide.Plugins
                     if (!splitItem.MoveToContainer(oven.inventory)) // Break if oven is full
                         break;
                 }
-
+            
                 if (neededFuel <= 0)
                     break;
             }
