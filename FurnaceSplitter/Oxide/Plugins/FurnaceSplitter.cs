@@ -390,7 +390,7 @@ namespace Oxide.Plugins
             neededFuel -= oven.inventory.GetAmount(oven.fuelType.itemid, false);
             var playerFuel = playerInventory.FindItemIDs(oven.fuelType.itemid);
 
-            if (neededFuel <= 0)
+            if (neededFuel <= 0 || playerFuel.Count <= 0)
                 return;
             
             foreach (var fuelItem in playerFuel)
