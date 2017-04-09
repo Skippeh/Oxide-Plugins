@@ -94,7 +94,7 @@ namespace Oxide.Plugins
 
         private void Loaded()
         {
-            storedData = Interface.Oxide.DataFileSystem.ReadObject<StoredData>("FurnaceSplitterOptions");
+            storedData = Interface.Oxide.DataFileSystem.ReadObject<StoredData>("FurnaceSplitter");
         }
 
         private void OnServerInitialized()
@@ -122,7 +122,7 @@ namespace Oxide.Plugins
 
         private void SaveData()
         {
-            Interface.Oxide.DataFileSystem.WriteObject("FurnaceSplitterOptions", storedData);
+            Interface.Oxide.DataFileSystem.WriteObject("FurnaceSplitter", storedData);
         }
 
         private void InitPlayer(BasePlayer player)
