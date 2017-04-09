@@ -363,6 +363,8 @@ namespace Oxide.Plugins
                     else
                         item.amount -= totalMoved;
 
+                    AutoAddFuel(playerLoot, oven);
+
                     container.MarkDirty();
                     originalContainer.MarkDirty();
                     return true;
@@ -380,6 +382,39 @@ namespace Oxide.Plugins
             }
 
             return returnValue;
+        }
+
+        private void AutoAddFuel(PlayerInventory playerInventory, BaseOven oven)
+        {
+            int neededFuel = (int)Math.Ceiling(GetOvenInfo(oven).FuelNeeded);
+            neededFuel -= oven.inventory.GetAmount(oven.fuelType.itemid, false);
+            var playerFuel = playerInventory.FindItemIDs(oven.fuelType.itemid);
+
+            if (neededFuel <= 0)
+                return;
+
+            foreach (var fuelItem in playerFuel)
+            {
+                if (oven.inventory.CanAcceptItem(fuelItem) != ItemContainer.CanAcceptResult.CanAccept)
+                    break;
+
+                var toTake = Math.Min(fuelItem.amount, neededFuel);
+                neededFuel -= toTake;
+
+                if (toTake >= fuelItem.amount)
+                {
+                    fuelItem.MoveToContainer(oven.inventory);
+                }
+                else
+                {
+                    var splitItem = fuelItem.SplitItem(toTake);
+                    if (!splitItem.MoveToContainer(oven.inventory)) // Break if oven is full
+                        break;
+                }
+
+                if (neededFuel <= 0)
+                    break;
+            }
         }
 
         private int FindMatchingSlotIndex(ItemContainer container, out Item existingItem, ItemDefinition itemType, List<int> indexBlacklist)
