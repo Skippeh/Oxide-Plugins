@@ -111,7 +111,9 @@ namespace Oxide.Plugins
                 { "title", "Furnace Splitter" },
                 { "eta", "ETA" },
                 { "totalstacks", "Total stacks" },
-                { "trim", "Trim fuel" }
+                { "trim", "Trim fuel" },
+                { "lootsource_invalid", "Current loot source invalid" },
+                { "unsupported_furnace", "Unsupported furnace." }
             }, this, "en");
         }
 
@@ -832,7 +834,7 @@ namespace Oxide.Plugins
 
             if (lootSource == null || !compatibleOvens.Contains(lootSource.ShortPrefabName))
             {
-                player.ConsoleMessage("Current loot source invalid");
+                player.ConsoleMessage(lang.GetMessage("lootsource_invalid", this, player.UserIDString));
                 return;
             }
 
@@ -853,7 +855,8 @@ namespace Oxide.Plugins
             }
             else
             {
-                player.ConsoleMessage("Unsupported furnace '" + ovenName + "'");
+                Debug.LogWarning("[FurnaceSplitter] Unsupported furnace '" + ovenName + "'");
+                player.ConsoleMessage(lang.GetMessage("unsupported_furnace", this, player.UserIDString));
             }
 
             CreateUiIfFurnaceOpen(player);
@@ -867,7 +870,7 @@ namespace Oxide.Plugins
 
             if (lootSource == null || !compatibleOvens.Contains(lootSource.ShortPrefabName))
             {
-                player.ConsoleMessage("Current loot source invalid");
+                player.ConsoleMessage(lang.GetMessage("lootsource_invalid", this, player.UserIDString));
                 return;
             }
 
