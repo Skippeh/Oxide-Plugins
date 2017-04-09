@@ -878,9 +878,7 @@ namespace Oxide.Plugins
 
             if (toRemove <= 0)
                 return;
-
-            Puts("{0}, {1}", totalFuel, toRemove);
-
+            
             foreach (var fuelItem in fuelSlots)
             {
                 var toTake = Math.Min(fuelItem.amount, toRemove);
