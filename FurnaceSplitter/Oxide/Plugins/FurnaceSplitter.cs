@@ -815,5 +815,52 @@ namespace Oxide.Plugins
 
             CreateUiIfFurnaceOpen(player);
         }
+
+        [ConsoleCommand("furnacesplitter.trim")]
+        private void ConsoleCommand_Trim(ConsoleSystem.Arg arg)
+        {
+            var player = arg.Player();
+            var lootSource = player.inventory.loot?.entitySource as BaseOven;
+
+            if (lootSource == null || !compatibleOvens.Contains(lootSource.ShortPrefabName))
+            {
+                player.ConsoleMessage("Current loot source invalid");
+                return;
+            }
+
+            var ovenInfo = GetOvenInfo(lootSource);
+            var fuelSlots = lootSource.inventory.itemList.Where(item => item.info == lootSource.fuelType).ToList();
+            int totalFuel = fuelSlots.Sum(item => item.amount);
+            int toRemove = (int) Math.Floor(totalFuel - ovenInfo.FuelNeeded);
+
+            if (toRemove <= 0)
+                return;
+
+            Puts("{0}, {1}", totalFuel, toRemove);
+
+            foreach (var fuelItem in fuelSlots)
+            {
+                var toTake = Math.Min(fuelItem.amount, toRemove);
+                toRemove -= toTake;
+
+                var dropPosition = player.GetDropPosition();
+                var dropVelocity = player.GetDropVelocity();
+
+                if (toTake >= fuelItem.amount)
+                {
+                    if (!player.inventory.GiveItem(fuelItem))
+                        fuelItem.Drop(dropPosition, dropVelocity, Quaternion.identity);
+                }
+                else
+                {
+                    var splitItem = fuelItem.SplitItem(toTake);
+                    if (!player.inventory.GiveItem(splitItem))
+                        splitItem.Drop(dropPosition, dropVelocity, Quaternion.identity);
+                }
+
+                if (toRemove <= 0)
+                    break;
+            }
+        }
     }
 }
