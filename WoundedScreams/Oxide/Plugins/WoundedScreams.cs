@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Wounded Screams", "Skipcast", "1.0.0")]
+    [Info("Wounded Screams", "Skipcast", "1.0.0", ResourceId = 2416)]
     [Description("Restores the screams when a player gets wounded.")]
     public class WoundedScreams : RustPlugin
     {
@@ -53,7 +53,7 @@ namespace Oxide.Plugins
         {
             if (effectRepeaters.ContainsKey(entity))
                 return effectRepeaters[entity];
-
+            
             return null;
         } 
 
