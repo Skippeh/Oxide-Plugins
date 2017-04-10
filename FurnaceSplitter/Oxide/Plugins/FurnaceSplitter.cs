@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 using Oxide.Core;
+using Oxide.Core.Plugins;
 using Oxide.Game.Rust.Cui;
 using UnityEngine;
 
@@ -50,7 +52,7 @@ namespace Oxide.Plugins
             public int DeltaAmount;
         }
 
-        private class OvenInfo
+        public class OvenInfo
         {
             public float ETA;
             public float FuelNeeded;
@@ -67,7 +69,7 @@ namespace Oxide.Plugins
             public Dictionary<string, int> TotalStacks = new Dictionary<string, int>();
         }
 
-        private enum MoveResult
+        public enum MoveResult
         {
             Ok,
             SlotsFilled,
@@ -169,7 +171,7 @@ namespace Oxide.Plugins
             }
         }
 
-        private OvenInfo GetOvenInfo(BaseOven oven)
+        public OvenInfo GetOvenInfo(BaseOven oven)
         {
             using (TimeWarning.New("FurnaceSplitter.GetOvenInfo", 0.01f))
             {
@@ -299,7 +301,7 @@ namespace Oxide.Plugins
                     if (cookable.lowTemp > workTemperature || cookable.highTemp < workTemperature)
                         return null;
 
-                    InternalMoveSplitItem(item, oven, totalSlots);
+                    MoveSplitItem(item, oven, totalSlots);
                     originalContainer.MarkDirty();
                     return true;
                 }
@@ -323,14 +325,7 @@ namespace Oxide.Plugins
             return returnValue;
         }
 
-        // Called by other plugins
-        public string MoveSplitItem(Item item, BaseOven oven, int totalSlots)
-        {
-            MoveResult result = InternalMoveSplitItem(item, oven, totalSlots);
-            return result.ToString();
-        }
-
-        private MoveResult InternalMoveSplitItem(Item item, BaseOven oven, int totalSlots)
+        public MoveResult MoveSplitItem(Item item, BaseOven oven, int totalSlots)
         {
             var container = oven.inventory;
             int invalidItemsCount = container.itemList.Count(slotItem => !IsSlotCompatible(slotItem, oven, item.info));
@@ -931,5 +926,23 @@ namespace Oxide.Plugins
                     break;
             }
         }
+
+        #region Exposed plugin methods
+        
+        [HookMethod("MoveSplitItem")]
+        public string Hook_MoveSplitItem(Item item, BaseOven oven, int totalSlots)
+        {
+            MoveResult result = MoveSplitItem(item, oven, totalSlots);
+            return result.ToString();
+        }
+        
+        [HookMethod("GetOvenInfo")]
+        public JObject Hook_GetOvenInfo(BaseOven oven)
+        {
+            var ovenInfo = GetOvenInfo(oven);
+            return JObject.FromObject(ovenInfo);
+        }
+
+        #endregion
     }
 }
