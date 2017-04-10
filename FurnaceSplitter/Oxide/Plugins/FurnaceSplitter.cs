@@ -302,7 +302,6 @@ namespace Oxide.Plugins
                         return null;
 
                     MoveSplitItem(item, oven, totalSlots);
-                    originalContainer.MarkDirty();
                     return true;
                 }
             };
@@ -356,7 +355,7 @@ namespace Oxide.Plugins
 
                 if (slot == -1) // full
                 {
-                    return MoveResult.SlotsFilled;
+                    return MoveResult.NoSlotsAvailable;
                 }
 
                 addedSlots.Add(slot);
@@ -396,14 +395,21 @@ namespace Oxide.Plugins
                 totalMoved += slot.DeltaAmount;
             }
 
-            if (totalMoved >= item.amount)
-                item.Remove();
-            else
-                item.amount -= totalMoved;
-
-
             container.MarkDirty();
-            return MoveResult.Ok;
+
+            if (totalMoved >= item.amount)
+            {
+                item.Remove();
+                item.GetRootContainer()?.MarkDirty();
+                return MoveResult.Ok;
+            }
+            else
+            {
+                item.amount -= totalMoved;
+                item.GetRootContainer()?.MarkDirty();
+                return MoveResult.SlotsFilled;
+            }
+
         }
 
         private void AutoAddFuel(PlayerInventory playerInventory, BaseOven oven)
