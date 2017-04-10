@@ -299,82 +299,7 @@ namespace Oxide.Plugins
                     if (cookable.lowTemp > workTemperature || cookable.highTemp < workTemperature)
                         return null;
 
-                    int invalidItemsCount = container.itemList.Count(slotItem => !IsSlotCompatible(slotItem, oven, item.info));
-                    int numOreSlots = Math.Min(container.capacity - invalidItemsCount, totalSlots);
-                    int totalMoved = 0;
-                    int totalAmount = Math.Min(item.amount + container.itemList.Where(slotItem => slotItem.info == item.info).Take(numOreSlots).Sum(slotItem => slotItem.amount), item.info.stackable * numOreSlots);
-                    
-                    if (numOreSlots <= 0)
-                    {
-                        return true;
-                    }
-
-                    //Puts("---------------------------");
-                    
-                    int totalStackSize = Math.Min(totalAmount / numOreSlots, item.info.stackable);
-                    int remaining = totalAmount - (totalAmount / numOreSlots) * numOreSlots;
-                    
-                    List<int> addedSlots = new List<int>();
-
-                    //Puts("total: {0}, remaining: {1}, totalStackSize: {2}", totalAmount, remaining, totalStackSize);
-                    
-                    List<OvenSlot> ovenSlots = new List<OvenSlot>();
-
-                    for (int i = 0; i < numOreSlots; ++i)
-                    {
-                        Item existingItem;
-                        var slot = FindMatchingSlotIndex(container, out existingItem, item.info, addedSlots);
-
-                        if (slot == -1) // full
-                        {
-                            return true;
-                        }
-
-                        addedSlots.Add(slot);
-
-                        var ovenSlot = new OvenSlot
-                        {
-                            Position = existingItem?.position,
-                            Index = slot,
-                            Item = existingItem
-                        };
-                        
-                        int currentAmount = existingItem?.amount ?? 0;
-                        int missingAmount = totalStackSize - currentAmount + (i < remaining ? 1 : 0);
-                        ovenSlot.DeltaAmount = missingAmount;
-                        
-                        //Puts("[{0}] current: {1}, delta: {2}, total: {3}", slot, currentAmount, ovenSlot.DeltaAmount, currentAmount + missingAmount);
-
-                        if (currentAmount + missingAmount <= 0)
-                            continue;
-
-                        ovenSlots.Add(ovenSlot);
-                    }
-                    
-                    foreach (var slot in ovenSlots)
-                    {
-                        if (slot.Item == null)
-                        {
-                            var newItem = ItemManager.Create(item.info, slot.DeltaAmount, item.skin);
-                            slot.Item = newItem;
-                            newItem.MoveToContainer(container, slot.Position ?? slot.Index);
-                        }
-                        else
-                        {
-                            slot.Item.amount += slot.DeltaAmount;
-                        }
-
-                        totalMoved += slot.DeltaAmount;
-                    }
-                    
-                    if (totalMoved >= item.amount)
-                        item.Remove();
-                    else
-                        item.amount -= totalMoved;
-
-                    AutoAddFuel(playerLoot, oven);
-
-                    container.MarkDirty();
+                    InternalMoveSplitItem(item, oven, totalSlots);
                     originalContainer.MarkDirty();
                     return true;
                 }
@@ -387,10 +312,103 @@ namespace Oxide.Plugins
                 var oven = container?.entityOwner as BaseOven ?? item.GetRootContainer().entityOwner as BaseOven;
 
                 if (oven != null && compatibleOvens.Contains(oven.ShortPrefabName))
+                {
+                    if (returnValue is bool && (bool) returnValue)
+                        AutoAddFuel(playerLoot, oven);
+
                     queuedUiUpdates.Push(oven);
+                }
             }
 
             return returnValue;
+        }
+
+        // Called by other plugins
+        public string MoveSplitItem(Item item, BaseOven oven, int totalSlots)
+        {
+            MoveResult result = InternalMoveSplitItem(item, oven, totalSlots);
+            return result.ToString();
+        }
+
+        private MoveResult InternalMoveSplitItem(Item item, BaseOven oven, int totalSlots)
+        {
+            var container = oven.inventory;
+            int invalidItemsCount = container.itemList.Count(slotItem => !IsSlotCompatible(slotItem, oven, item.info));
+            int numOreSlots = Math.Min(container.capacity - invalidItemsCount, totalSlots);
+            int totalMoved = 0;
+            int totalAmount = Math.Min(item.amount + container.itemList.Where(slotItem => slotItem.info == item.info).Take(numOreSlots).Sum(slotItem => slotItem.amount), item.info.stackable * numOreSlots);
+
+            if (numOreSlots <= 0)
+            {
+                return MoveResult.NoSlotsAvailable;
+            }
+
+            //Puts("---------------------------");
+
+            int totalStackSize = Math.Min(totalAmount / numOreSlots, item.info.stackable);
+            int remaining = totalAmount - (totalAmount / numOreSlots) * numOreSlots;
+
+            List<int> addedSlots = new List<int>();
+
+            //Puts("total: {0}, remaining: {1}, totalStackSize: {2}", totalAmount, remaining, totalStackSize);
+
+            List<OvenSlot> ovenSlots = new List<OvenSlot>();
+
+            for (int i = 0; i < numOreSlots; ++i)
+            {
+                Item existingItem;
+                var slot = FindMatchingSlotIndex(container, out existingItem, item.info, addedSlots);
+
+                if (slot == -1) // full
+                {
+                    return MoveResult.SlotsFilled;
+                }
+
+                addedSlots.Add(slot);
+
+                var ovenSlot = new OvenSlot
+                {
+                    Position = existingItem?.position,
+                    Index = slot,
+                    Item = existingItem
+                };
+
+                int currentAmount = existingItem?.amount ?? 0;
+                int missingAmount = totalStackSize - currentAmount + (i < remaining ? 1 : 0);
+                ovenSlot.DeltaAmount = missingAmount;
+
+                //Puts("[{0}] current: {1}, delta: {2}, total: {3}", slot, currentAmount, ovenSlot.DeltaAmount, currentAmount + missingAmount);
+
+                if (currentAmount + missingAmount <= 0)
+                    continue;
+
+                ovenSlots.Add(ovenSlot);
+            }
+
+            foreach (var slot in ovenSlots)
+            {
+                if (slot.Item == null)
+                {
+                    var newItem = ItemManager.Create(item.info, slot.DeltaAmount, item.skin);
+                    slot.Item = newItem;
+                    newItem.MoveToContainer(container, slot.Position ?? slot.Index);
+                }
+                else
+                {
+                    slot.Item.amount += slot.DeltaAmount;
+                }
+
+                totalMoved += slot.DeltaAmount;
+            }
+
+            if (totalMoved >= item.amount)
+                item.Remove();
+            else
+                item.amount -= totalMoved;
+
+
+            container.MarkDirty();
+            return MoveResult.Ok;
         }
 
         private void AutoAddFuel(PlayerInventory playerInventory, BaseOven oven)
