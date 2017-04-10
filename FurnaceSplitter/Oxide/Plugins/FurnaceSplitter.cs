@@ -73,7 +73,7 @@ namespace Oxide.Plugins
         {
             Ok,
             SlotsFilled,
-            NoSlotsAvailable
+            NotEnoughSlots
         }
 
         private StoredData storedData;
@@ -334,7 +334,7 @@ namespace Oxide.Plugins
 
             if (numOreSlots <= 0)
             {
-                return MoveResult.NoSlotsAvailable;
+                return MoveResult.NotEnoughSlots;
             }
 
             //Puts("---------------------------");
@@ -355,7 +355,7 @@ namespace Oxide.Plugins
 
                 if (slot == -1) // full
                 {
-                    return MoveResult.NoSlotsAvailable;
+                    return MoveResult.NotEnoughSlots;
                 }
 
                 addedSlots.Add(slot);
