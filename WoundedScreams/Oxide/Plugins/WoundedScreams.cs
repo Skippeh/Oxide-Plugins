@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
-using Oxide.Plugins;
 using UnityEngine;
-using Random = Oxide.Core.Random;
 
 namespace Oxide.Plugins
 {
     [Info("Wounded Screams", "Skipcast", "1.0.0")]
-    [Description("Restores screams when player gets wounded.")]
+    [Description("Restores the screams when a player gets wounded.")]
     public class WoundedScreams : RustPlugin
     {
         private class EffectRepeater : MonoBehaviour
