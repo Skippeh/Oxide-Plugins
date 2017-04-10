@@ -6,12 +6,12 @@
     {
         private void OnServerInitialized()
         {
-            SingletonComponent<Climate>.Instance.FogMultiplier = 0;
+            SingletonComponent<Climate>.Instance.Overrides.Fog = 0;
         }
 
         private void Unload()
         {
-            SingletonComponent<Climate>.Instance.FogMultiplier = -1;
+            SingletonComponent<Climate>.Instance.Overrides.Fog = -1;
         }
     }
 }
