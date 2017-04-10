@@ -67,6 +67,13 @@ namespace Oxide.Plugins
             public Dictionary<string, int> TotalStacks = new Dictionary<string, int>();
         }
 
+        private enum MoveResult
+        {
+            Ok,
+            SlotsFilled,
+            NoSlotsAvailable
+        }
+
         private StoredData storedData;
         private Dictionary<ulong, PlayerOptions> allPlayerOptions => storedData.AllPlayerOptions;
 
