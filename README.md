@@ -6,4 +6,5 @@ By default every plugin copies its output to a local rust server's oxide plugins
 
 ### Releases
 You can find released plugins on oxidemod.org here:\
-Furnace Splitter - http://oxidemod.org/plugins/furnace-splitter.2406/
+Furnace Splitter - http://oxidemod.org/plugins/furnace-splitter.2406/ \
+Wounded Screams - http://oxidemod.org/plugins/wounded-screams.2416/
