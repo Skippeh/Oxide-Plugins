@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Oxide.Plugins
@@ -64,10 +65,12 @@ namespace Oxide.Plugins
             if (effects == null)
                 return;
 
-            foreach (var effectRepeater in effects)
+            foreach (var effectRepeater in effects.ToList())
             {
                 RemoveEffectRepeater(effectRepeater);
             }
+
+            effectRepeaters.Remove(entity);
         }
 
         private void RemoveEffectRepeater(EffectRepeater effectRepeater)
