@@ -86,6 +86,9 @@ namespace Oxide.Plugins
 
         void OnPlayerWound(BasePlayer player)
         {
+            if (!player || !player.gameObject || player.IsDestroyed)
+                return;
+
             var repeater = player.gameObject.AddComponent<EffectRepeater>();
             repeater.EffectName = "assets/bundled/prefabs/fx/player/beartrap_scream.prefab";
             repeater.MinDelay = 6;
