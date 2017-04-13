@@ -43,18 +43,17 @@ namespace Oxide.Plugins
 
         private void AddEffectRepeater(BaseEntity entity, EffectRepeater repeater)
         {
-            if (!effectRepeaters.ContainsKey(entity))
-                effectRepeaters[entity] = new List<EffectRepeater>();
-
-            var list = effectRepeaters[entity];
+            var list = GetEffectRepeaters(entity) ?? (effectRepeaters[entity] = new List<EffectRepeater>());
             list.Add(repeater);
         }
-
+        
         private List<EffectRepeater> GetEffectRepeaters(BaseEntity entity)
         {
             if (effectRepeaters.ContainsKey(entity))
-                return effectRepeaters[entity];
-            
+            {
+                return effectRepeaters[entity] ?? (effectRepeaters[entity] = new List<EffectRepeater>());
+            }
+
             return null;
         } 
 
