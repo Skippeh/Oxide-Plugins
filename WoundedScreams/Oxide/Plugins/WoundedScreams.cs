@@ -8,80 +8,65 @@ namespace Oxide.Plugins
     [Description("Restores the screams when a player gets wounded.")]
     public class WoundedScreams : RustPlugin
     {
-        private class EffectRepeater : MonoBehaviour
+        private const string effectName = "assets/bundled/prefabs/fx/player/beartrap_scream.prefab";
+
+        private class Scream
         {
-            public float MinDelay;
-            public float MaxDelay;
-            public string EffectName;
+            public float NextPlay = Time.time;
+            private float GetRandomDelay() => Random.Range(6f, 7f);
 
-            private float nextPlay = Time.time;
-
-            private void Update()
+            public void ApplyDelay()
             {
-                if (Time.time >= nextPlay)
-                {
-                    nextPlay = Time.time + GetRandomDelay();
-                    Effect.server.Run(EffectName, transform.position);
-                }
-            }
-
-            private float GetRandomDelay()
-            {
-                return Random.Range(MinDelay, MaxDelay);
+                NextPlay = Time.time + GetRandomDelay();
             }
         }
 
-        private readonly Dictionary<BaseEntity, List<EffectRepeater>> effectRepeaters = new Dictionary<BaseEntity, List<EffectRepeater>>();
+        private readonly Dictionary<BasePlayer, Scream> screams = new Dictionary<BasePlayer, Scream>();
 
-        void Unload()
+        private void AddPlayerScream(BasePlayer player)
         {
-            foreach (var kv in effectRepeaters)
+            if (screams.ContainsKey(player))
             {
-                RemoveEffectRepeaters(kv.Key);
-            }
-        }
-
-        private void AddEffectRepeater(BaseEntity entity, EffectRepeater repeater)
-        {
-            var list = GetEffectRepeaters(entity) ?? (effectRepeaters[entity] = new List<EffectRepeater>());
-            list.Add(repeater);
-        }
-        
-        private List<EffectRepeater> GetEffectRepeaters(BaseEntity entity)
-        {
-            if (effectRepeaters.ContainsKey(entity))
-            {
-                return effectRepeaters[entity] ?? (effectRepeaters[entity] = new List<EffectRepeater>());
-            }
-
-            return null;
-        } 
-
-        private void RemoveEffectRepeaters(BaseEntity entity)
-        {
-            var effects = GetEffectRepeaters(entity);
-
-            if (effects == null)
+                Debug.LogWarning("Trying to add more than 1 scream to player.");
                 return;
-
-            foreach (var effectRepeater in effects.ToList())
-            {
-                RemoveEffectRepeater(effectRepeater);
             }
 
-            effectRepeaters.Remove(entity);
+            var scream = new Scream();
+            screams.Add(player, scream);
         }
 
-        private void RemoveEffectRepeater(EffectRepeater effectRepeater)
+        private void RemovePlayerScream(BasePlayer player)
         {
-            GameObject.Destroy(effectRepeater);
+            if (screams.ContainsKey(player))
+                screams.Remove(player);
         }
 
         #region Rust hooks
 
+        void OnTick()
+        {
+            foreach (var kv in screams)
+            {
+                if (Time.time >= kv.Value.NextPlay)
+                {
+                    if (!kv.Key || kv.Key.IsDestroyed || !kv.Key.IsConnected || !kv.Key.IsWounded())
+                    {
+                        continue;
+                    }
+
+                    Vector3 position = kv.Key.GetNetworkPosition();
+                    Effect.server.Run(effectName, position);
+                    kv.Value.ApplyDelay();
+                }
+            }
+        }
+
         void OnEntityDeath(BaseCombatEntity entity, HitInfo info)
         {
-            RemoveEffectRepeaters(entity);
+            var player = entity as BasePlayer;
+
+            if (player != null)
+                RemovePlayerScream(player);
         }
 
         void OnPlayerWound(BasePlayer player)
@@ -89,31 +74,33 @@ namespace Oxide.Plugins
             if (!player || !player.gameObject || player.IsDestroyed)
                 return;
 
-            var repeater = player.gameObject.AddComponent<EffectRepeater>();
-            repeater.EffectName = "assets/bundled/prefabs/fx/player/beartrap_scream.prefab";
-            repeater.MinDelay = 6;
-            repeater.MaxDelay = 7;
-            AddEffectRepeater(player, repeater);
+            AddPlayerScream(player);
         }
 
         void OnPlayerRecover(BasePlayer player)
         {
-            RemoveEffectRepeaters(player);
+            RemovePlayerScream(player);
         }
 
         void OnEntityKill(BaseNetworkable entity)
         {
-            var baseEntity = entity as BaseEntity;
+            var player = entity as BasePlayer;
 
-            if (baseEntity == null)
-                return;
+            if (player != null)
+                RemovePlayerScream(player);
+        }
 
-            RemoveEffectRepeaters(baseEntity);
+        void OnPlayerInit(BasePlayer player)
+        {
+            if (player.IsWounded())
+            {
+                AddPlayerScream(player);
+            }
         }
 
         void OnPlayerDisconnected(BasePlayer player, string reason)
         {
-            RemoveEffectRepeaters(player);
+            RemovePlayerScream(player);
         }
 
         #endregion
