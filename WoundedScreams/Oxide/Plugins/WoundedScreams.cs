@@ -8,6 +8,11 @@ namespace Oxide.Plugins
     [Description("Restores the screams when a player gets wounded.")]
     public class WoundedScreams : RustPlugin
     {
+        private class PluginConfig
+        {
+            public bool ScreamOnDemand = false;
+        }
+
         private const string effectName = "assets/bundled/prefabs/fx/player/beartrap_scream.prefab";
 
         private class Scream
@@ -22,6 +27,27 @@ namespace Oxide.Plugins
         }
 
         private readonly Dictionary<BasePlayer, Scream> screams = new Dictionary<BasePlayer, Scream>();
+
+        private PluginConfig config;
+
+        protected override void LoadDefaultConfig()
+        {
+            PrintWarning("Creating default configuration");
+
+            config = new PluginConfig();
+            Config.Clear();
+            Config.WriteObject(config);
+        }
+
+        void Init()
+        {
+            config = Config.ReadObject<PluginConfig>();
+        }
+
+        protected override void SaveConfig()
+        {
+            Config.WriteObject(config);
+        }
 
         private void AddPlayerScream(BasePlayer player)
         {
