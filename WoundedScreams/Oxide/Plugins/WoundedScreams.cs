@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Oxide.Game.Rust.Cui;
 using UnityEngine;
 
 namespace Oxide.Plugins
@@ -17,16 +19,22 @@ namespace Oxide.Plugins
 
         private class Scream
         {
-            public float NextPlay = Time.time;
+            public float NextPlay;
             private float GetRandomDelay() => Random.Range(6f, 7f);
 
             public void ApplyDelay()
             {
                 NextPlay = Time.time + GetRandomDelay();
             }
+
+            public void Play(Vector3 position)
+            {
+                Effect.server.Run(effectName, position);
+            }
         }
 
         private readonly Dictionary<BasePlayer, Scream> screams = new Dictionary<BasePlayer, Scream>();
+        private readonly Dictionary<ulong, string> openUis = new Dictionary<ulong, string>();
 
         private PluginConfig config;
 
@@ -51,6 +59,20 @@ namespace Oxide.Plugins
 
         private void AddPlayerScream(BasePlayer player)
         {
+            CreateUI(player);
+
+            // Start timer next tick when woundedDuration has been set to its new value.
+            timer.Once(0, () =>
+            {
+                float woundedDuration = (float)player.GetType().GetField("woundedDuration", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(player);
+
+                timer.In(woundedDuration - player.secondsSinceWoundedStarted, () =>
+                {
+                    if (player && !player.IsDestroyed && player.IsConnected && player.IsWounded())
+                        RemovePlayerScream(player);
+                });
+            });
+
             if (screams.ContainsKey(player))
             {
                 Debug.LogWarning("Trying to add more than 1 scream to player.");
@@ -63,8 +85,60 @@ namespace Oxide.Plugins
 
         private void RemovePlayerScream(BasePlayer player)
         {
+            DestroyUI(player);
+
             if (screams.ContainsKey(player))
+            {
                 screams.Remove(player);
+            }
+        }
+
+        private void CreateUI(BasePlayer player)
+        {
+            DestroyUI(player);
+
+            var ui = new CuiElementContainer();
+            var rootPanelName = ui.Add(new CuiPanel
+            {
+                Image =
+                {
+                    Color = "0 0 0 0"
+                },
+                RectTransform =
+                {
+                    AnchorMin = "0 0.924",
+                    AnchorMax = "1 1"
+                }
+            });
+
+            // Text label
+            ui.Add(new CuiLabel
+            {
+                RectTransform =
+                {
+                    AnchorMin = "0 0",
+                    AnchorMax = "1 1"
+                },
+                Text =
+                {
+                    Text = "Press your USE key to scream",
+                    Align = TextAnchor.LowerCenter,
+                    Color = "0.968 0.921 0.882 1",
+                    FontSize = 14
+                }
+            }, rootPanelName);
+            
+            openUis.Add(player.userID, rootPanelName);
+            CuiHelper.AddUi(player, ui);
+        }
+
+        private void DestroyUI(BasePlayer player)
+        {
+            if (!openUis.ContainsKey(player.userID))
+                return;
+
+            CuiHelper.DestroyUi(player, openUis[player.userID]);
+            openUis.Remove(player.userID);
         }
 
         #region Rust hooks
@@ -80,10 +154,22 @@ namespace Oxide.Plugins
                         continue;
                     }
 
-                    Vector3 position = kv.Key.GetNetworkPosition();
-                    Effect.server.Run(effectName, position);
-                    kv.Value.ApplyDelay();
+                    if ((config.ScreamOnDemand && kv.Key.serverInput.WasJustPressed(BUTTON.USE)) || !config.ScreamOnDemand)
+                    {
+                        Vector3 position = kv.Key.GetNetworkPosition();
+                        kv.Value.Play(position);
+                        kv.Value.ApplyDelay();
+                    }
                 }
+            }
+        }
+
+        void Unload()
+        {
+            foreach (var kv in openUis.ToDictionary(kv => kv.Key, kv => kv.Value))
+            {
+                var player = BasePlayer.FindByID(kv.Key);
+                DestroyUI(player);
             }
         }
 
