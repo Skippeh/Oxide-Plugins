@@ -104,6 +104,9 @@ namespace Oxide.Plugins
         private void Loaded()
         {
             storedData = Interface.Oxide.DataFileSystem.ReadObject<StoredData>("FurnaceSplitter");
+
+            if (!permission.PermissionExists("furnacesplitter.use", this))
+                permission.RegisterPermission("furnacesplitter.use", this);
         }
 
         private void OnServerInitialized()
@@ -122,7 +125,8 @@ namespace Oxide.Plugins
                 { "totalstacks", "Total stacks" },
                 { "trim", "Trim fuel" },
                 { "lootsource_invalid", "Current loot source invalid" },
-                { "unsupported_furnace", "Unsupported furnace." }
+                { "unsupported_furnace", "Unsupported furnace." },
+                { "nopermission", "You don't have permission to use this." }
             }, this, "en");
         }
 
@@ -308,8 +312,8 @@ namespace Oxide.Plugins
 
             object returnValue = splitFunc();
 
+            if (HasPermission(player) && GetEnabled(player))
             {
-                var container = playerLoot.FindContainer(targetContainer);
                 var oven = container?.entityOwner as BaseOven ?? item.GetRootContainer().entityOwner as BaseOven;
 
                 if (oven != null && compatibleOvens.Contains(oven.ShortPrefabName))
@@ -497,7 +501,7 @@ namespace Oxide.Plugins
         {
             var oven = entity as BaseOven;
 
-            if (oven == null || !compatibleOvens.Contains(oven.ShortPrefabName))
+            if (oven == null || !HasPermission(player) || !compatibleOvens.Contains(oven.ShortPrefabName))
                 return;
             
             AddLooter(oven, player);
@@ -832,14 +836,21 @@ namespace Oxide.Plugins
                 return;
 
             var uiName = openUis[player.userID];
-            CuiHelper.DestroyUi(player, uiName);
-            openUis.Remove(player.userID);
+
+            if (openUis.Remove(player.userID))
+                CuiHelper.DestroyUi(player, uiName);
         }
 
         [ConsoleCommand("furnacesplitter.enabled")]
         private void ConsoleCommand_Toggle(ConsoleSystem.Arg arg)
         {
             var player = arg.Player();
+
+            if (!HasPermission(player))
+            {
+                player.ConsoleMessage(lang.GetMessage("nopermission", this, player.UserIDString));
+                return;
+            }
 
             if (!arg.HasArgs())
             {
@@ -858,6 +869,12 @@ namespace Oxide.Plugins
             var player = arg.Player();
             var lootSource = player.inventory.loot?.entitySource as BaseOven;
 
+            if (!HasPermission(player))
+            {
+                player.ConsoleMessage(lang.GetMessage("nopermission", this, player.UserIDString));
+                return;
+            }
+            
             if (lootSource == null || !compatibleOvens.Contains(lootSource.ShortPrefabName))
             {
                 player.ConsoleMessage(lang.GetMessage("lootsource_invalid", this, player.UserIDString));
@@ -893,6 +910,12 @@ namespace Oxide.Plugins
         {
             var player = arg.Player();
             var lootSource = player.inventory.loot?.entitySource as BaseOven;
+
+            if (!HasPermission(player))
+            {
+                player.ConsoleMessage(lang.GetMessage("nopermission", this, player.UserIDString));
+                return;
+            }
 
             if (lootSource == null || !compatibleOvens.Contains(lootSource.ShortPrefabName))
             {
@@ -931,6 +954,11 @@ namespace Oxide.Plugins
                 if (toRemove <= 0)
                     break;
             }
+        }
+
+        private bool HasPermission(BasePlayer player)
+        {
+            return permission.UserHasPermission(player.UserIDString, "furnacesplitter.use");
         }
 
         #region Exposed plugin methods
