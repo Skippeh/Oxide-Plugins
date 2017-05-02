@@ -607,7 +607,7 @@ namespace Oxide.Plugins
                 {
                     Text = lang.GetMessage("title", this, player.UserIDString),
                     Align = TextAnchor.MiddleLeft,
-                    Color = "0.77 0.68 0.68 1",
+                    Color = "0.77 0.7 0.7 1",
                     FontSize = 13
                 }
             }, headerPanel);
