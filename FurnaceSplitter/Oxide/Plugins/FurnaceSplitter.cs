@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Furnace Splitter", "Skipcast", "1.2.0", ResourceId = 2406)]
+    [Info("Furnace Splitter", "Skipcast", "2.0.0", ResourceId = 2406)]
     [Description("Splits up resources in furnaces automatically and shows useful furnace information.")]
     public class FurnaceSplitter : RustPlugin
     {
