@@ -52,6 +52,14 @@ namespace Oxide.Plugins
             config = Config.ReadObject<PluginConfig>();
         }
 
+        private void OnServerInitialized()
+        {
+            lang.RegisterMessages(new Dictionary<string, string>
+            {
+                {"helptext", "Press your USE key to scream"}
+            }, this, "en");
+        }
+
         protected override void SaveConfig()
         {
             Config.WriteObject(config);
@@ -121,7 +129,7 @@ namespace Oxide.Plugins
                 },
                 Text =
                 {
-                    Text = "Press your USE key to scream",
+                    Text = lang.GetMessage("helptext", this, player.UserIDString),
                     Align = TextAnchor.LowerCenter,
                     Color = "0.968 0.921 0.882 1",
                     FontSize = 14
