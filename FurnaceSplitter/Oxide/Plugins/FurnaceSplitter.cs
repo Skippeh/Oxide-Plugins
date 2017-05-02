@@ -267,15 +267,15 @@ namespace Oxide.Plugins
 
         private object CanMoveItem(Item item, PlayerInventory playerLoot, uint targetContainer, int targetSlot)
         {
+            var player = Extensions.GetBaseEntity(playerLoot.loot);
+            var container = playerLoot.FindContainer(targetContainer);
+            var originalContainer = item.GetRootContainer();
+
             Func<object> splitFunc = () =>
             {
                 using (TimeWarning.New("FurnaceSplitter.CanMoveItem", 0.005f))
                 {
-                    var player = Extensions.GetBaseEntity(playerLoot.loot);
-                    var container = playerLoot.FindContainer(targetContainer);
-                    var originalContainer = item.GetRootContainer();
-
-                    if (player == null || !GetEnabled(player))
+                    if (player == null || !HasPermission(player) || !GetEnabled(player))
                         return null;
 
                     var playerOptions = allPlayerOptions[player.userID];
