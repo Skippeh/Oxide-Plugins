@@ -20,7 +20,7 @@ namespace Oxide.Plugins
         private class Scream
         {
             public float NextPlay;
-            private float GetRandomDelay() => Random.Range(6f, 7f);
+            private float GetRandomDelay() => 6f;
 
             public void ApplyDelay()
             {
