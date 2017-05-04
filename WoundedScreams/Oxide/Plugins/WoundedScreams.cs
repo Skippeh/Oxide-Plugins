@@ -67,7 +67,6 @@ namespace Oxide.Plugins
 
         private void AddPlayerScream(BasePlayer player)
         {
-            CreateUI(player);
             if (screams.ContainsKey(player))
             {
                 Debug.LogWarning("Trying to add more than 1 scream to player.");
@@ -76,6 +75,7 @@ namespace Oxide.Plugins
 
             var scream = new Scream();
             screams.Add(player, scream);
+            CreateUI(player);
         }
 
         private void RemovePlayerScream(BasePlayer player)
@@ -91,6 +91,8 @@ namespace Oxide.Plugins
         private void CreateUI(BasePlayer player)
         {
             DestroyUI(player);
+
+            bool canScream = screams[player].NextPlay <= Time.time;
 
             var ui = new CuiElementContainer();
             var rootPanelName = ui.Add(new CuiPanel
@@ -118,8 +120,8 @@ namespace Oxide.Plugins
                 {
                     Text = lang.GetMessage("helptext", this, player.UserIDString),
                     Align = TextAnchor.LowerCenter,
-                    Color = "0.968 0.921 0.882 1",
-                    FontSize = 14
+                    Color = canScream ? "0.968 0.921 0.882 1" : "0.968 0.921 0.882 0.5",
+                    FontSize = canScream ? 14 : 13
                 }
             }, rootPanelName);
             
@@ -154,6 +156,15 @@ namespace Oxide.Plugins
                         Vector3 position = kv.Key.GetNetworkPosition();
                         kv.Value.Play(position);
                         kv.Value.ApplyDelay();
+
+                        CreateUI(kv.Key);
+                        timer.In(kv.Value.NextPlay - Time.time, () =>
+                        {
+                            if (!screams.ContainsKey(kv.Key))
+                                return;
+
+                            CreateUI(kv.Key);
+                        });
                     }
                 }
             }
