@@ -68,19 +68,6 @@ namespace Oxide.Plugins
         private void AddPlayerScream(BasePlayer player)
         {
             CreateUI(player);
-
-            // Start timer next tick when woundedDuration has been set to its new value.
-            timer.Once(0, () =>
-            {
-                float woundedDuration = (float)player.GetType().GetField("woundedDuration", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(player);
-
-                timer.In(woundedDuration - player.secondsSinceWoundedStarted, () =>
-                {
-                    if (player && !player.IsDestroyed && player.IsConnected && player.IsWounded())
-                        RemovePlayerScream(player);
-                });
-            });
-
             if (screams.ContainsKey(player))
             {
                 Debug.LogWarning("Trying to add more than 1 scream to player.");
