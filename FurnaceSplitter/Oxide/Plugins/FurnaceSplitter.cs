@@ -149,7 +149,7 @@ namespace Oxide.Plugins
                     Enabled = true,
                     TotalStacks = new Dictionary<string, int>
                     {
-                        { "furnace", 4 },
+                        { "furnace", 3 },
                         { "furnace.large", 15 },
                         { "campfire", 2 },
                         { "refinery_small_deployed", 4 }
