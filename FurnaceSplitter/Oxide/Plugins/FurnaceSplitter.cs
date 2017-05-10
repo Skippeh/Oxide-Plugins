@@ -523,6 +523,16 @@ namespace Oxide.Plugins
             RemoveLooter(oven, player);
         }
 
+        private void OnEntityKill(BaseNetworkable networkable)
+        {
+            var oven = networkable as BaseOven;
+
+            if (oven != null)
+            {
+                DestroyOvenUI(oven);
+            }
+        }
+
         private void OnOvenToggle(BaseOven oven, BasePlayer player)
         {
             if (compatibleOvens.Contains(oven.ShortPrefabName))
@@ -843,6 +853,24 @@ namespace Oxide.Plugins
 
             if (openUis.Remove(player.userID))
                 CuiHelper.DestroyUi(player, uiName);
+        }
+
+        private void DestroyOvenUI(BaseOven oven)
+        {
+            if (oven == null) throw new ArgumentNullException(nameof(oven));
+
+            foreach (KeyValuePair<ulong, string> kv in openUis)
+            {
+                BasePlayer player = BasePlayer.FindByID(kv.Key);
+
+                var playerLootOven = player.inventory.loot?.entitySource as BaseOven;
+
+                if (oven == playerLootOven)
+                {
+                    DestroyUI(player);
+                    RemoveLooter(oven, player);
+                }
+            }
         }
 
         [ConsoleCommand("furnacesplitter.enabled")]
