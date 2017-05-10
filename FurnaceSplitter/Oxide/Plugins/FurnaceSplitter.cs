@@ -163,11 +163,15 @@ namespace Oxide.Plugins
             while (queuedUiUpdates.Count > 0)
             {
                 var oven = queuedUiUpdates.Pop();
+
+                if (!oven || oven.IsDestroyed)
+                    continue;
+
                 var ovenInfo = GetOvenInfo(oven);
 
                 GetLooters(oven)?.ForEach(plr =>
                 {
-                    if (plr && oven && !plr.IsDestroyed && !oven.IsDestroyed)
+                    if (plr && !plr.IsDestroyed)
                     {
                         CreateUi(plr, oven, ovenInfo);
                     }
