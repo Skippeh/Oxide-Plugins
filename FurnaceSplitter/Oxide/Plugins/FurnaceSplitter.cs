@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Oxide.Core;
 using Oxide.Core.Plugins;
@@ -63,6 +64,12 @@ namespace Oxide.Plugins
             public Dictionary<ulong, PlayerOptions> AllPlayerOptions { get; private set; } = new Dictionary<ulong, PlayerOptions>();
         }
 
+	    private class PluginConfig
+	    {
+			//[JsonRequired]
+		    public Vector2 UiPosition { get; set; } = new Vector2(0.6505f, 0.022f);
+	    }
+
         private class PlayerOptions
         {
             public bool Enabled;
@@ -74,9 +81,35 @@ namespace Oxide.Plugins
             Ok,
             SlotsFilled,
             NotEnoughSlots
-        }
+		}
 
-        private StoredData storedData;
+		private class Vector2Converter : JsonConverter
+		{
+			public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+			{
+				var vec = (Vector2) value;
+				serializer.Serialize(writer, new { vec.x, vec.y });
+			}
+
+			public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+			{
+				Vector2 result = new Vector2();
+				JObject jVec = JObject.Load(reader);
+
+				result.x = jVec["x"].ToObject<float>();
+				result.y = jVec["y"].ToObject<float>();
+				
+				return result;
+			}
+
+			public override bool CanConvert(Type objectType)
+			{
+				return objectType == typeof (Vector2);
+			}
+		}
+
+		private StoredData storedData;
+	    private PluginConfig config;
         private Dictionary<ulong, PlayerOptions> allPlayerOptions => storedData.AllPlayerOptions;
 
         private readonly Dictionary<ulong, string> openUis = new Dictionary<ulong, string>();
@@ -96,10 +129,17 @@ namespace Oxide.Plugins
             DestroyUI(player);
         }
 
-        void OnPlayerInit(BasePlayer player)
+        private void OnPlayerInit(BasePlayer player)
         {
             InitPlayer(player);
         }
+
+	    private void Init()
+	    {
+			// Only add if it's not already been added in LoadDefaultConfig. That would be the case the first time the plugin is initialized.
+			if (!Config.Settings.Converters.Any(conv => conv.GetType() == typeof (Vector2Converter)))
+			    Config.Settings.Converters.Add(new Vector2Converter());
+	    }
 
         private void Loaded()
         {
@@ -107,10 +147,34 @@ namespace Oxide.Plugins
 
             if (!permission.PermissionExists("furnacesplitter.use", this))
                 permission.RegisterPermission("furnacesplitter.use", this);
-        }
 
-        private void OnServerInitialized()
-        {
+	        if (config == null)
+	        {
+				// Default config not created, load existing config.
+		        config = Config.ReadObject<PluginConfig>();
+	        }
+	        else
+	        {
+				// Save default config.
+		        Config.WriteObject(config);
+	        }
+
+	        Puts(config.UiPosition.ToString("0.####"));
+        }
+		
+		#region Configuration
+
+	    protected override void LoadDefaultConfig()
+		{
+			Config.Settings.Converters.Add(new Vector2Converter());
+		    PrintWarning("Creating default config for FurnaceSplitter.");
+		    config = new PluginConfig();
+		}
+
+	    #endregion
+
+		private void OnServerInitialized()
+		{
             foreach (var player in Player.Players)
             {
                 InitPlayer(player);
@@ -582,6 +646,9 @@ namespace Oxide.Plugins
 
             DestroyUI(player);
 
+	        Vector2 uiPosition = config.UiPosition;
+	        Vector2 uiSize = new Vector2(0.1785f, 0.111f);
+
             var result = new CuiElementContainer();
             var rootPanelName = result.Add(new CuiPanel
             {
@@ -591,8 +658,10 @@ namespace Oxide.Plugins
                 },
                 RectTransform =
                 {
-                    AnchorMin = "0.6505 0.022",
-                    AnchorMax = "0.829 0.133"
+					AnchorMin = uiPosition.x + " " + uiPosition.y,
+					AnchorMax = (uiPosition.x + uiSize.x) + " " + (uiPosition.y + uiSize.y)
+                    //AnchorMin = "0.6505 0.022",
+                    //AnchorMax = "0.829 0.133"
                 }
             }, "Hud.Menu");
 
@@ -1009,6 +1078,6 @@ namespace Oxide.Plugins
             return JObject.FromObject(ovenInfo);
         }
 
-        #endregion
-    }
+		#endregion
+	}
 }
