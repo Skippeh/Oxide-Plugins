@@ -32,23 +32,23 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Pluton-AutoDownload-Update-Compile\server\RustDedicated_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Facepunch.Console">
-      <HintPath>..\..\..\..\Pluton-AutoDownload-Update-Compile\server\RustDedicated_Data\Managed\Facepunch.Console.dll</HintPath>
+      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\Facepunch.Console.dll</HintPath>
     </Reference>
     <Reference Include="Facepunch.UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Pluton-AutoDownload-Update-Compile\server\RustDedicated_Data\Managed\Facepunch.UnityEngine.dll</HintPath>
+      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\Facepunch.UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="Oxide.Core">
-      <HintPath>..\..\..\..\Pluton-AutoDownload-Update-Compile\server\RustDedicated_Data\Managed\Oxide.Core.dll</HintPath>
+      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\Oxide.Core.dll</HintPath>
     </Reference>
     <Reference Include="Oxide.Core.CSharp">
-      <HintPath>..\..\..\..\Pluton-AutoDownload-Update-Compile\server\RustDedicated_Data\Managed\Oxide.Core.CSharp.dll</HintPath>
+      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\Oxide.Core.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Oxide.Game.Rust">
-      <HintPath>..\..\..\..\Pluton-AutoDownload-Update-Compile\server\RustDedicated_Data\Managed\Oxide.Game.Rust.dll</HintPath>
+      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\Oxide.Game.Rust.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
