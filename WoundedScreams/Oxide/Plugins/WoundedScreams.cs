@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Wounded Screams", "Skipcast", "2.1.2", ResourceId = 2416)]
+    [Info("Wounded Screams", "Skipcast", "2.1.3", ResourceId = 2416)]
     [Description("Restores the screams when a player gets wounded.")]
     public class WoundedScreams : RustPlugin
     {
