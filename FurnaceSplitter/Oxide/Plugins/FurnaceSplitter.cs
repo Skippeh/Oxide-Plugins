@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-	[Info("Furnace Splitter", "Skipcast", "2.0.1", ResourceId = 2406)]
+	[Info("Furnace Splitter", "Skipcast", "2.1.0", ResourceId = 2406)]
 	[Description("Splits up resources in furnaces automatically and shows useful furnace information.")]
 	public class FurnaceSplitter : RustPlugin
 	{
@@ -158,8 +158,6 @@ namespace Oxide.Plugins
 				// Save default config.
 				Config.WriteObject(config);
 			}
-
-			Puts(config.UiPosition.ToString("0.####"));
 		}
 		
 		#region Configuration
