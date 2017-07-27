@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoundedScreams", "WoundedSc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordF7Report", "DiscordF7Report\DiscordF7Report.csproj", "{D6C283E5-AED9-440C-B172-681A57B6692A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCrafter", "AutoCrafter\AutoCrafter.csproj", "{60AD4E6E-9E9F-422F-BAFC-0597F3DFD90E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{D6C283E5-AED9-440C-B172-681A57B6692A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6C283E5-AED9-440C-B172-681A57B6692A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6C283E5-AED9-440C-B172-681A57B6692A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60AD4E6E-9E9F-422F-BAFC-0597F3DFD90E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60AD4E6E-9E9F-422F-BAFC-0597F3DFD90E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60AD4E6E-9E9F-422F-BAFC-0597F3DFD90E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60AD4E6E-9E9F-422F-BAFC-0597F3DFD90E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

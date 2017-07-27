@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("NoFog")]
+[assembly: AssemblyTitle("AutoCrafter")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("NoFog")]
+[assembly: AssemblyProduct("AutoCrafter")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("becf989e-e197-4e20-85f3-605d5bcb52ca")]
+[assembly: Guid("60ad4e6e-9e9f-422f-bafc-0597f3dfd90e")]
 
 // Version information for an assembly consists of the following four values:
 //
