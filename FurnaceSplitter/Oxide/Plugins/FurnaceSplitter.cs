@@ -859,7 +859,7 @@ namespace Oxide.Plugins
         {
             if (oven == null) throw new ArgumentNullException(nameof(oven));
 
-            foreach (KeyValuePair<ulong, string> kv in openUis)
+            foreach (KeyValuePair<ulong, string> kv in openUis.ToDictionary(kv => kv.Key, kv => kv.Value))
             {
                 BasePlayer player = BasePlayer.FindByID(kv.Key);
 
