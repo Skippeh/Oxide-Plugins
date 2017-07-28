@@ -61,8 +61,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		// Lookup table for players on each crafting task.
 		private readonly Dictionary<BasePlayer, Dictionary<CraftTask, int>> taskLookup = new Dictionary<BasePlayer, Dictionary<CraftTask, int>>();
 		
-		private readonly DroppedItemContainer outputContainer;
-		private readonly ItemContainer outputInventory;
+		private DroppedItemContainer outputContainer;
+		private ItemContainer outputInventory;
 		private readonly Timer resetDespawnTimer;
 		private float nextPickup = Time.time;
 		private const float pickupDelay = 0.5f;
@@ -74,8 +74,23 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		{
 			Recycler = recycler;
 
-			Vector3 outputPosition = Position + (recycler.transform.forward * 0.4f) + (recycler.transform.up * 0.72f) + (recycler.transform.right * -0.25f);
-			Quaternion outputRotation = recycler.ServerRotation * Quaternion.Euler(90, 0, 0);
+			CreateOutputContainer();
+
+			// Reset despawn timer on loot bag once per minute.
+			resetDespawnTimer = Utility.Timer.Every(60, () =>
+			{
+				if (!outputContainer.IsDestroyed)
+					outputContainer.ResetRemovalTime();
+			});
+
+			recycler.gameObject.AddComponent<GroundWatch>();
+			recycler.gameObject.AddComponent<DestroyOnGroundMissing>();
+		}
+
+		private void CreateOutputContainer()
+		{
+			Vector3 outputPosition = Position + (Recycler.transform.forward * 0.4f) + (Recycler.transform.up * 0.72f) + (Recycler.transform.right * -0.25f);
+			Quaternion outputRotation = Recycler.ServerRotation * Quaternion.Euler(90, 0, 0);
 
 			outputContainer = (DroppedItemContainer) GameManager.server.CreateEntity(Constants.ItemDropPrefab, outputPosition, outputRotation);
 			outputContainer.playerName = "Crafted items";
@@ -95,20 +110,18 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			outputInventory.capacity = 37;
 			var item = ItemManager.Create(ItemManager.FindItemDefinition("gears"), 1);
 			item.MoveToContainer(outputInventory, outputInventory.capacity - 1);
-			
+
 			var rigidBody = outputContainer.GetComponent<Rigidbody>();
 			rigidBody.isKinematic = true; // Prevent physics from moving the container.
-
-			// Reset despawn timer on loot bag once per minute.
-			resetDespawnTimer = Utility.Timer.Every(60, () =>
-			{
-				if (!outputContainer.IsDestroyed)
-					outputContainer.ResetRemovalTime();
-			});
 		}
 
 		public void Tick(float elapsed)
 		{
+			if (outputContainer.IsDestroyed)
+			{
+				CrafterManager.DestroyCrafter(this, false, destroyOutputContainer: false); // Don't destroy output container because it's already destroyed.
+			}
+
 			ProcessQueue(elapsed);
 			ProcessWorldItems();
 			ProcessNearbyPlayers();
@@ -127,17 +140,20 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			
 			Recycler.Kill();
 
-			if (!destroyOutputContainer)
+			if (!outputContainer.IsDestroyed)
 			{
-				// Remove rock from output container that keeps it from despawning when emptied
-				OutputInventory.GetSlot(OutputInventory.capacity - 1).Remove();
+				if (!destroyOutputContainer)
+				{
+					// Remove rock from output container that keeps it from despawning when emptied
+					OutputInventory.GetSlot(OutputInventory.capacity - 1).Remove();
 
-				// Enable physics on output container
-				Output.GetComponent<Rigidbody>().isKinematic = false;
-			}
-			else
-			{
-				outputContainer.Kill();
+					// Enable physics on output container
+					Output.GetComponent<Rigidbody>().isKinematic = false;
+				}
+				else
+				{
+					outputContainer.Kill();
+				}
 			}
 		}
 

@@ -51,6 +51,42 @@ namespace Oxide.Plugins
 			});
 		}
 
+		void OnEntityGroundMissing(BaseEntity entity)
+		{
+			var recycler = entity as Recycler;
+
+			if (recycler == null)
+				return;
+
+			var crafter = CrafterManager.GetCrafter(recycler);
+
+			if (crafter == null)
+				return;
+
+			// Empty recycler, otherwise the hidden items inside it will drop into the world.
+			foreach (var item in recycler.inventory.itemList)
+			{
+				item.Remove();
+			}
+
+			recycler.inventory.itemList.Clear();
+		}
+
+		void OnEntityKill(BaseNetworkable entity)
+		{
+			var recycler = entity as Recycler;
+
+			if (recycler == null)
+				return;
+
+			var crafter = CrafterManager.GetCrafter(recycler);
+
+			if (crafter == null)
+				return;
+
+			CrafterManager.DestroyCrafter(crafter, false, false);
+		}
+
 		private object OnServerCommand(ConsoleSystem.Arg arg)
 		{
 			if (arg.Connection == null)
