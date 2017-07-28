@@ -8,7 +8,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		private static Plugin plugin;
 		private static Core.Libraries.Lang lang;
 
-		public static Dictionary<string, string> DefaultMessages { get; private set; } = new Dictionary<string, string>
+		public static readonly Dictionary<string, string> DefaultMessages = new Dictionary<string, string>
 		{
 			{"nopermission", "You don't have permission to use this."},
 			{"invalid-target", "The deployable in front of you is not a {0}."},

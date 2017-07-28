@@ -12,18 +12,20 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// <summary>
 		/// Lookup map of active uis and the players that have it active.
 		/// </summary>
-		private static readonly Dictionary<string, List<BasePlayer>> activeUis = new Dictionary<string, List<BasePlayer>>();
+		private static Dictionary<string, List<BasePlayer>> activeUis;
 
 		/// <summary>
 		/// Lookup table for object based uis.
 		/// </summary>
-		private static readonly Dictionary<string, UIBase> uiLookup = new Dictionary<string, UIBase>();
+		private static Dictionary<string, UIBase> uiLookup;
 
 		private static Timer tickTimer;
 		private static float lastTick = Time.time;
 
 		public static void Initialize()
 		{
+			activeUis = new Dictionary<string, List<BasePlayer>>();
+			uiLookup = new Dictionary<string, UIBase>();
 			tickTimer = Utility.Timer.Every(0.5f, Tick); // Update ui every 500ms.
 		}
 

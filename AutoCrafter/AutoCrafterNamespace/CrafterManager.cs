@@ -12,8 +12,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 {
 	public static class CrafterManager
 	{
-		public static Dictionary<Vector3, Crafter> Crafters { get; private set; } = new Dictionary<Vector3, Crafter>();
-		private static readonly Dictionary<Recycler, Crafter> crafterLookup = new Dictionary<Recycler, Crafter>();
+		public static Dictionary<Vector3, Crafter> Crafters { get; private set; }
+		private static Dictionary<Recycler, Crafter> crafterLookup;
 		
 		private static float lastTick;
 		private static Timer tickTimer;
@@ -23,12 +23,16 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// <summary>
 		/// Keeps track of how many crafters a player is in range of.
 		/// </summary>
-		private static readonly Dictionary<BasePlayer, int> numActiveCrafters = new Dictionary<BasePlayer, int>();  
+		private static Dictionary<BasePlayer, int> numActiveCrafters;
 
 		#region Initialization, destruction and save/loading
 
 		public static void Initialize()
 		{
+			Crafters = new Dictionary<Vector3, Crafter>();
+			crafterLookup = new Dictionary<Recycler, Crafter>();
+			numActiveCrafters = new Dictionary<BasePlayer, int>();
+
 			lastTick = Time.time;
 			tickTimer = Utility.Timer.Every(0.2f, Tick); // Tick every 200ms
 
@@ -249,11 +253,14 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{
 				UiManager.AddPlayerUI(activeCrafterUi, player);
 			}
+
+			Debug.Log(numActiveCrafters[player]);
 		}
 
 		private static void OnPlayerLeaveCrafter(Crafter crafter, BasePlayer player)
 		{
 			numActiveCrafters[player]--;
+			Debug.Log(numActiveCrafters[player]);
 
 			if (numActiveCrafters[player] <= 0)
 			{

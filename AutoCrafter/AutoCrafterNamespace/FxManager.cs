@@ -34,11 +34,11 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			}
 		}
 
-		private static readonly Dictionary<int, RepeatedFx> RepeatingFx = new Dictionary<int, RepeatedFx>();
+		private static Dictionary<int, RepeatedFx> RepeatingFx;
 		
 		public static void Initialize()
 		{
-
+			RepeatingFx = new Dictionary<int, RepeatedFx>();
 		}
 
 		public static void Destroy()
