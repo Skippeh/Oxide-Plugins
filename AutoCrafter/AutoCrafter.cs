@@ -125,7 +125,10 @@ namespace Oxide.Plugins
 				return null;
 
 			if (entity.OwnerID != player.userID)
+			{
+				player.ShowScreenMessage("You need to be the owner.", 3f);
 				return null;
+			}
 
 			if (researchTable != null) // Upgrade to crafter (if less than 10 minutes since placement)
 			{
