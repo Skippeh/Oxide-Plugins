@@ -1,8 +1,6 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 using Oxide.Plugins.AutoCrafterNamespace;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
-using Oxide.Plugins.AutoCrafterNamespace.JsonConverters;
 using Rust;
 
 namespace Oxide.Plugins
@@ -146,35 +144,6 @@ namespace Oxide.Plugins
 			CrafterManager.CreateCrafter(entity);
 		}
 
-		private static bool FindOwnedEntity<T>(BasePlayer player, out T entity) where T : BaseEntity
-		{
-			RaycastHit hit;
-			if (!Physics.Raycast(player.eyes.HeadRay(), out hit, MaxDistance, 1 << (int) Layer.Deployed))
-			{
-				player.TranslatedChatMessage("no-target");
-				entity = null;
-				return false;
-			}
-
-			entity = hit.transform.GetComponentInParent<T>();
-
-			if (entity == null)
-			{
-				player.TranslatedChatMessage("invalid-target", typeof (T).Name);
-				return false;
-			}
-
-			// Check that the entity is owned by the player, or if he's admin and the entity was not spawned by the game.
-			if (entity.OwnerID != player.userID && (!player.IsAdmin || entity.OwnerID == 0))
-			{
-				player.TranslatedChatMessage("target-notowned");
-				Debug.Log(entity.OwnerID);
-				return false;
-			}
-
-			return true;
-		}
-
 		[ChatCommand("downgradecrafter")]
 		private void Chatcmd_DowngradeCrafter(BasePlayer player)
 		{
@@ -201,20 +170,35 @@ namespace Oxide.Plugins
 			CrafterManager.DestroyCrafter(crafter, true, false);
 		}
 
-		[ChatCommand("iscrafter")]
-		private void ChatCmd_IsCrafter(BasePlayer player)
-		{
-			if (!player.IsAdmin)
-				return;
-
-			Recycler recycler;
-
-			if (!FindOwnedEntity(player, out recycler))
-				return;
-
-			player.ChatMessage(CrafterManager.ContainsRecycler(recycler).ToString());
-		}
-
 		#endregion
+
+		private static bool FindOwnedEntity<T>(BasePlayer player, out T entity) where T : BaseEntity
+		{
+			RaycastHit hit;
+			if (!Physics.Raycast(player.eyes.HeadRay(), out hit, MaxDistance, 1 << (int)Layer.Deployed))
+			{
+				player.TranslatedChatMessage("no-target");
+				entity = null;
+				return false;
+			}
+
+			entity = hit.transform.GetComponentInParent<T>();
+
+			if (entity == null)
+			{
+				player.TranslatedChatMessage("invalid-target", typeof(T).Name);
+				return false;
+			}
+
+			// Check that the entity is owned by the player, or if he's admin and the entity was not spawned by the game.
+			if (entity.OwnerID != player.userID && (!player.IsAdmin || entity.OwnerID == 0))
+			{
+				player.TranslatedChatMessage("target-notowned");
+				Debug.Log(entity.OwnerID);
+				return false;
+			}
+
+			return true;
+		}
 	}
 }
