@@ -7,7 +7,7 @@
     <ProjectGuid>{60AD4E6E-9E9F-422F-BAFC-0597F3DFD90E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Oxide</RootNamespace>
+    <RootNamespace>Oxide.Plugins</RootNamespace>
     <AssemblyName>AutoCrafter</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -138,7 +138,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Oxide\Plugins\AutoCrafter.cs" />
+    <Compile Include="AutoCrafter.cs" />
+    <Compile Include="AutoCrafterNamespace\Constants.cs" />
+    <Compile Include="AutoCrafterNamespace\Extensions\BasePlayerExtensions.cs" />
+    <Compile Include="AutoCrafterNamespace\Crafter.cs" />
+    <Compile Include="AutoCrafterNamespace\CrafterManager.cs" />
+    <Compile Include="AutoCrafterNamespace\Extensions\ContainerExtensions.cs" />
+    <Compile Include="AutoCrafterNamespace\Extensions\JsonExtensions.cs" />
+    <Compile Include="AutoCrafterNamespace\FxManager.cs" />
+    <Compile Include="AutoCrafterNamespace\JsonConverters\Vector2Converter.cs" />
+    <Compile Include="AutoCrafterNamespace\JsonConverters\Vector3Converter.cs" />
+    <Compile Include="AutoCrafterNamespace\Lang.cs" />
+    <Compile Include="AutoCrafterNamespace\PluginConfig.cs" />
+    <Compile Include="AutoCrafterNamespace\Utility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
