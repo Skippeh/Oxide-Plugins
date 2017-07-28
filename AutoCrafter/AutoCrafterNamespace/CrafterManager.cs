@@ -26,7 +26,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			CrafterManager.timerManager = timerManager;
 
 			lastTick = Time.time;
-			tickTimer = timerManager.Every(0.5f, Tick); // Tick every 500ms
+			tickTimer = timerManager.Every(0.2f, Tick); // Tick every 200ms
 		}
 
 		public static void Destroy()
@@ -35,8 +35,11 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			foreach (var crafter in Crafters.Values)
 			{
-				crafter.Destroy();
+				crafter.Downgrade(true);
 			}
+			
+			Crafters.Clear();
+			crafterLookup.Clear();
 		}
 
 		public static void Save()
@@ -60,17 +63,17 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				List<BaseEntity> entities = new List<BaseEntity>();
 				Vis.Entities(position, 0.1f, entities); // Find all entities within 0.1 game units of the saved position.
 
-				// Compare entity positions and take the first recycler that is within 0.001 units of the saved position.
+				// Compare entity positions and take the first research table that is within 0.001 units of the saved position.
 				float maxDistanceSqr = 0.001f * 0.001f;
-				var recycler = entities.FirstOrDefault(ent => ent is Recycler && (position - ent.ServerPosition).sqrMagnitude <= maxDistanceSqr) as Recycler;
+				var researchTable = entities.FirstOrDefault(ent => ent is ResearchTable && (position - ent.ServerPosition).sqrMagnitude <= maxDistanceSqr) as ResearchTable;
 
-				if (recycler == null)
+				if (researchTable == null)
 				{
-					Debug.LogWarning("Unable to load crafter; recycler at saved position was not found. (" + position.ToString("0.########") + ")");
+					Debug.LogWarning("Unable to load crafter; research table at saved position was not found. (" + position.ToString("0.########") + ")");
 					continue;
 				}
 
-				CreateCrafter(recycler);
+				CreateCrafter(researchTable);
 				++loadedCount;
 			}
 
@@ -114,15 +117,11 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			var crafter = new Crafter(recycler);
 
 			var gears = ItemManager.Create(ItemManager.FindItemDefinition("gears"), Constants.RecyclerNumInputSlots);
-			var pipes = ItemManager.Create(ItemManager.FindItemDefinition("metalpipe"), Constants.RecyclerNumInputSlots);
 
 			for (int i = 0; i < Constants.RecyclerNumInputSlots; ++i)
 			{
 				var split = gears.SplitItem(1) ?? gears;
-				var split2 = pipes.SplitItem(1) ?? pipes;
-
 				split.MoveToContainer(recycler.inventory, i, false);
-				split2.MoveToContainer(recycler.inventory, i + Constants.RecyclerNumInputSlots, false);
 			}
 			
 			recycler.inventory.SetLocked(true);
@@ -138,8 +137,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// Destroys the given crafter and optionally spawns a research table in its place.
 		/// </summary>
 		/// <param name="crafter">The crafter to destroy.</param>
-		/// <param name="replaceWithResearchTable">If true, then the recycler will be replaced with a research table.</param>
-		public static void DestroyCrafter(Crafter crafter, bool replaceWithResearchTable)
+		/// <param name="downgrade">If true, then the recycler will be replaced with a research table.</param>
+		public static void DestroyCrafter(Crafter crafter, bool downgrade, bool destroyOutputContainer)
 		{
 			if (!Crafters.Remove(crafter.Position))
 			{
@@ -157,29 +156,14 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			crafterLookup.Remove(crafter.Recycler);
 
-			if (replaceWithResearchTable)
+			if (downgrade)
 			{
-				var researchTableEntity = GameManager.server.CreateEntity(Constants.DeployedResearchTablePrefab, crafter.Recycler.ServerPosition, crafter.Recycler.ServerRotation);
-				var researchTable = researchTableEntity.GetComponent<ResearchTable>();
-				researchTable.OwnerID = crafter.Recycler.OwnerID; // Copy ownership to research table.
-				researchTable.Spawn();
+				crafter.Downgrade(destroyOutputContainer);
 			}
-
-			// Remove all items in input slots
-			var itemArray = crafter.Recycler.inventory.itemList.ToArray();
-			for (int i = 0; i < Constants.RecyclerNumInputSlots; ++i)
+			else
 			{
-				if (i >= itemArray.Length)
-					break;
-
-				itemArray[i].Remove();
+				crafter.Destroy(destroyOutputContainer);
 			}
-
-			// Drop all items in recycler onto the ground
-			if (crafter.Recycler.inventory.AnyItems())
-				crafter.Recycler.inventory.Drop(Constants.ItemDropPrefab, crafter.Recycler.ServerPosition + (replaceWithResearchTable ? new Vector3(0, 1.5f, 0) : Vector3.zero), crafter.Recycler.ServerRotation);
-
-			crafter.Recycler.Kill();
 		}
 
 		/// <summary>

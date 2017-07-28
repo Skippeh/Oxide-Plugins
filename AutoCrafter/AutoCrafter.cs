@@ -198,7 +198,7 @@ namespace Oxide.Plugins
 				return;
 			}
 
-			CrafterManager.DestroyCrafter(crafter, true);
+			CrafterManager.DestroyCrafter(crafter, true, false);
 		}
 
 		[ChatCommand("iscrafter")]

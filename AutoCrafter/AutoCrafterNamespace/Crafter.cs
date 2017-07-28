@@ -106,15 +106,30 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			ProcessNearbyPlayers();
 			ProcessUiUpdates();
 		}
-
-		public void Destroy()
+		
+		/// <param name="unloading">Specify true if the plugin is unloading.</param>
+		public void Destroy(bool destroyOutputContainer)
 		{
 			resetDespawnTimer.DestroyToPool();
-			outputContainer.Kill();
 
 			foreach (var player in NearbyPlayers)
 			{
 				SendClearCraftingList(player);
+			}
+			
+			Recycler.Kill();
+
+			if (!destroyOutputContainer)
+			{
+				// Remove rock from output container that keeps it from despawning when emptied
+				OutputInventory.GetSlot(OutputInventory.capacity - 1).Remove();
+
+				// Enable physics on output container
+				Output.GetComponent<Rigidbody>().isKinematic = false;
+			}
+			else
+			{
+				outputContainer.Kill();
 			}
 		}
 
@@ -226,7 +241,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			// - Alive and not sleeping
 			// - Not crafting anything (that isn't related to this crafter).
 			// - Can see the recycler from their position, aka not behind a wall or anything
-			nearPlayers = nearPlayers.Where(plr => plr.IsAlive() && !plr.IsSleeping() && !crafting(plr) && Recycler.IsVisible(plr.ServerPosition)).ToList();
+			nearPlayers = nearPlayers.Where(plr => plr.IsAlive() && !plr.IsSleeping() && Recycler.IsVisible(plr.ServerPosition)).ToList();
 
 			var playersLeaving = previousNearbyPlayers.Where(plr => !nearPlayers.Contains(plr)).ToList();
 			var playersEntering = nearPlayers.Where(plr => !previousNearbyPlayers.Contains(plr)).ToList();
@@ -445,6 +460,19 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			}
 
 			return CancelTask(task.Key, player);
+		}
+
+		/// <summary>
+		/// Replaces the recycler with a research table and then destroys the crafter. Default behaviour will drop the output loot onto the ground.
+		/// </summary>
+		public void Downgrade(bool destroyOutputContainer = false)
+		{
+			var researchTableEntity = GameManager.server.CreateEntity(Constants.DeployedResearchTablePrefab, Recycler.ServerPosition, Recycler.ServerRotation);
+			var researchTable = researchTableEntity.GetComponent<ResearchTable>();
+			researchTable.OwnerID = Recycler.OwnerID; // Copy ownership to research table.
+			researchTable.Spawn();
+
+			Destroy(destroyOutputContainer);
 		}
 
 		#endregion
