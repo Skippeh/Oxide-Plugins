@@ -25,7 +25,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				FxName = fxName;
 				Position = position;
 				Interval = interval;
-				Timer = timerManager.Every(interval, Play);
+				Timer = Utility.Timer.Every(interval, Play);
 			}
 
 			private void Play()
@@ -35,12 +35,10 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		}
 
 		private static readonly Dictionary<int, RepeatedFx> RepeatingFx = new Dictionary<int, RepeatedFx>();
-
-		private static PluginTimers timerManager;
-
-		public static void Initialize(PluginTimers timer)
+		
+		public static void Initialize()
 		{
-			timerManager = timer;
+
 		}
 
 		public static void Destroy()

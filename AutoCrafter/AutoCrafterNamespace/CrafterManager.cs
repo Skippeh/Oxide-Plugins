@@ -13,20 +13,16 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 	{
 		public static Dictionary<Vector3, Crafter> Crafters { get; private set; } = new Dictionary<Vector3, Crafter>();
 		private static readonly Dictionary<Recycler, Crafter> crafterLookup = new Dictionary<Recycler, Crafter>();
-
-		private static PluginTimers timerManager;
-
+		
 		private static float lastTick;
 		private static Timer tickTimer;
 
 		#region Initialization, destruction and save/loading
 
-		public static void Initialize(PluginTimers timerManager)
+		public static void Initialize()
 		{
-			CrafterManager.timerManager = timerManager;
-
 			lastTick = Time.time;
-			tickTimer = timerManager.Every(0.2f, Tick); // Tick every 200ms
+			tickTimer = Utility.Timer.Every(0.2f, Tick); // Tick every 200ms
 		}
 
 		public static void Destroy()

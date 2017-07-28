@@ -94,8 +94,8 @@ namespace Oxide.Plugins
 		private void OnServerInitialized()
 		{
 			Lang.Initialize(this, lang);
-			FxManager.Initialize(timer);
-			CrafterManager.Initialize(timer);
+			FxManager.Initialize();
+			CrafterManager.Initialize();
 			CrafterManager.Load();
 		}
 
