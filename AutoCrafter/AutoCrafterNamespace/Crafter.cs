@@ -239,7 +239,6 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			// Keep all players that are the following:
 			// - Alive and not sleeping
-			// - Not crafting anything (that isn't related to this crafter).
 			// - Can see the recycler from their position, aka not behind a wall or anything
 			nearPlayers = nearPlayers.Where(plr => plr.IsAlive() && !plr.IsSleeping() && Recycler.IsVisible(plr.ServerPosition)).ToList();
 
