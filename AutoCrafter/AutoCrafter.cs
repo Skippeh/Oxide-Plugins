@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
 using Oxide.Plugins.AutoCrafterNamespace;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
-using Rust;
 
 namespace Oxide.Plugins
 {
@@ -9,8 +10,7 @@ namespace Oxide.Plugins
 	[Description("A machine that automatically crafts items so the player can do fun stuff instead.")]
 	public class AutoCrafter : RustPlugin
 	{
-		const string UsePermission = "autocrafter.use";
-		const float MaxDistance = 10f;
+		private readonly List<ItemAmount> UpgradeCost = new List<ItemAmount>();
 
 		#region Rust hooks
 
@@ -115,13 +115,51 @@ namespace Oxide.Plugins
 			return null;
 		}
 
+		private object OnHammerHit(BasePlayer player, HitInfo info)
+		{
+			BaseEntity entity = info.HitEntity;
+			var recycler = entity as Recycler;
+			var researchTable = entity as ResearchTable;
+
+			if ((recycler == null && researchTable == null) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission))
+				return null;
+
+			if (entity.OwnerID != player.userID)
+				return null;
+
+			if (researchTable != null) // Upgrade to crafter (if less than 10 minutes since placement)
+			{
+				return HandleUpgradeRequest(player, researchTable);
+			}
+
+			var crafter = CrafterManager.GetCrafter(recycler);
+
+			if (crafter == null)
+				return null;
+
+			return HandleDowngradeRequest(player, crafter);
+		}
+
 		private void Init()
 		{
 			Utility.Timer = timer;
 			Utility.Config = new PluginConfig(); // Todo: load from disk
 
+			foreach (var itemAmount in Utility.Config.UpgradeCost)
+			{
+				var itemDef = ItemManager.FindItemDefinition(itemAmount.Shortname);
+
+				if (itemDef == null)
+				{
+					PrintError("Could not find item with the shortname: '" + itemAmount.Shortname + "', skipping this ingredient!");
+					continue;
+				}
+
+				UpgradeCost.Add(new ItemAmount(itemDef, itemAmount.Amount));
+			}
+
 			Config.Settings.AddConverters();
-			permission.RegisterPermission(UsePermission, this);
+			permission.RegisterPermission(Constants.UsePermission, this);
 			lang.RegisterMessages(Lang.DefaultMessages, this, "en");
 		}
 		
@@ -163,77 +201,89 @@ namespace Oxide.Plugins
 		}
 
 		#endregion
+		
+		// For keeping track of how long ago they requested with the previous hammer hit. Used for confirming by hitting twice with hammer to upgrade or downgrade.
+		private readonly Dictionary<BasePlayer, float> lastHammerHit = new Dictionary<BasePlayer, float>();
 
-		#region Chat commands
-
-		[ChatCommand("autocrafter")]
-		private void ChatCmd_AutoCrafter(BasePlayer player)
+		// Return value:
+		// - null = continue with default behaviour of hammer hit
+		// - anything else: prevent default behaviour.
+		private object HandleUpgradeRequest(BasePlayer player, ResearchTable researchTable)
 		{
-			if (!permission.UserHasPermission(player.UserIDString, UsePermission))
+			// Make sure research table is full health, or allow it if repairing is disabled.
+			if (researchTable.Health() < researchTable.MaxHealth() && researchTable.repair.enabled)
+				return null;
+
+			// Don't allow upgrading if there's less than 8 seconds since the research table was attacked.
+			if (researchTable.SecondsSinceAttacked < 8)
+				return null;
+
+			if (UpgradeCost.Count > 0)
 			{
-				player.TranslatedChatMessage("nopermission");
-				return;
+				if (!player.CanCraft(UpgradeCost))
+				{
+					StringBuilder builder = new StringBuilder();
+
+					foreach (var ingredient in UpgradeCost)
+					{
+						builder.AppendLine("- x" + ingredient.amount.ToString("0") + " " + ingredient.itemDef.displayName.english);
+					}
+
+					string ingredientsStr = builder.ToString();
+
+					player.ShowScreenMessage("You do not have the required ingredients.\nYou need:\n" + ingredientsStr, 10, TextAnchor.MiddleLeft);
+					return true;
+				}
 			}
 
-			ResearchTable entity;
-			if (!FindOwnedEntity(player, out entity))
-				return;
+			float lastHit;
+			lastHammerHit.TryGetValue(player, out lastHit);
+			
+			if (Time.time - lastHit > Constants.HammerConfirmTime) // Confirm the upgrade
+			{
+				lastHammerHit[player] = Time.time;
+				player.ShowScreenMessage("Hit again to upgrade to a crafter...", Constants.HammerConfirmTime);
+				return true;
+			}
+			
+			lastHammerHit[player] = 0; // Reset time
 
-			CrafterManager.CreateCrafter(entity);
+			foreach (var ingredient in UpgradeCost)
+			{
+				List<Item> takenItems = new List<Item>();
+				player.inventory.Take(takenItems, ingredient.itemid, (int)ingredient.amount);
+			}
+
+			CrafterManager.CreateCrafter(researchTable);
+			FxManager.PlayFx(researchTable.ServerPosition, Constants.UpgradeTopTierFxPrefab);
+			player.HideScreenMessage();
+			return true;
 		}
 
-		[ChatCommand("downgradecrafter")]
-		private void Chatcmd_DowngradeCrafter(BasePlayer player)
+		// Return value:
+		// - null = continue with default behaviour of hammer hit
+		// - anything else: prevent default behaviour.
+		private object HandleDowngradeRequest(BasePlayer player, Crafter crafter)
 		{
-			if (!permission.UserHasPermission(player.UserIDString, UsePermission))
+			float lastRequest;
+			lastHammerHit.TryGetValue(player, out lastRequest);
+
+			if (Time.time - lastRequest > Constants.HammerConfirmTime) // Confirm the downgrade
 			{
-				player.TranslatedChatMessage("nopermission");
-				return;
+				lastHammerHit[player] = Time.time;
+				player.ShowScreenMessage("Hit again to downgrade to a research table...\n\nItems will not be lost.", Constants.HammerConfirmTime);
+				return true;
 			}
-
-			Recycler recycler;
-			if (!FindOwnedEntity(player, out recycler))
-			{
-				return;
-			}
-
-			var crafter = CrafterManager.GetCrafter(recycler);
-
-			if (crafter == null)
-			{
-				player.TranslatedChatMessage("target-not-crafter");
-				return;
-			}
-
+			
+			lastHammerHit[player] = 0; // Reset time
+			
 			CrafterManager.DestroyCrafter(crafter, true, false);
-		}
+			FxManager.PlayFx(crafter.Position, Constants.UpgradeMetalFxPrefab);
+			player.HideScreenMessage();
 
-		#endregion
-
-		private static bool FindOwnedEntity<T>(BasePlayer player, out T entity) where T : BaseEntity
-		{
-			RaycastHit hit;
-			if (!Physics.Raycast(player.eyes.HeadRay(), out hit, MaxDistance, 1 << (int)Layer.Deployed))
+			foreach (var itemAmount in UpgradeCost)
 			{
-				player.TranslatedChatMessage("no-target");
-				entity = null;
-				return false;
-			}
-
-			entity = hit.transform.GetComponentInParent<T>();
-
-			if (entity == null)
-			{
-				player.TranslatedChatMessage("invalid-target", typeof(T).Name);
-				return false;
-			}
-
-			// Check that the entity is owned by the player, or if he's admin and the entity was not spawned by the game.
-			if (entity.OwnerID != player.userID && (!player.IsAdmin || entity.OwnerID == 0))
-			{
-				player.TranslatedChatMessage("target-notowned");
-				Debug.Log(entity.OwnerID);
-				return false;
+				player.GiveItem(ItemManager.CreateByItemID(itemAmount.itemid, (int) itemAmount.amount));
 			}
 
 			return true;

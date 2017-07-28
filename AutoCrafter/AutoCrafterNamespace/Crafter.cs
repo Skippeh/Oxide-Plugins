@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
+using Oxide.Plugins.AutoCrafterNamespace.Extensions;
 using Oxide.Plugins.AutoCrafterNamespace.UI;
 using Rust;
 using UnityEngine;
@@ -142,11 +143,12 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			if (!outputContainer.IsDestroyed)
 			{
-				if (!destroyOutputContainer)
-				{
-					// Remove rock from output container that keeps it from despawning when emptied
-					OutputInventory.GetSlot(OutputInventory.capacity - 1).Remove();
+				// Remove rock from output container that keeps it from despawning when emptied
+				OutputInventory.GetSlot(OutputInventory.capacity - 1).Remove();
 
+				// Force kill output bag if there's nothing in it.
+				if (!destroyOutputContainer && OutputInventory.AnyItems())
+				{
 					// Enable physics on output container
 					Output.GetComponent<Rigidbody>().isKinematic = false;
 				}
@@ -166,13 +168,10 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			if (currentTask != null)
 			{
-				Debug.Log("Processing queue: " + currentTask.Blueprint.targetItem.displayName.english + " x" + currentTask.Amount + " (" + currentTask.Elapsed + "/" + currentTask.Blueprint.time + ")");
 				currentTask.Elapsed += elapsed;
 
 				if (currentTask.Elapsed >= currentTask.Blueprint.time)
 				{
-					Debug.Log("Add " + currentTask.Blueprint.amountToCreate + "x " + currentTask.Blueprint.targetItem.displayName.english + " to output container");
-
 					var item = ItemManager.Create(currentTask.Blueprint.targetItem, currentTask.Blueprint.amountToCreate, currentTask.SkinID);
 
 					if (!GiveItem(item))

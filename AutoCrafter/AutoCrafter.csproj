@@ -152,6 +152,7 @@
     <Compile Include="AutoCrafterNamespace\PluginConfig.cs" />
     <Compile Include="AutoCrafterNamespace\UiManager.cs" />
     <Compile Include="AutoCrafterNamespace\UI\ActiveCrafterUI.cs" />
+    <Compile Include="AutoCrafterNamespace\UI\ScreenMessageUI.cs" />
     <Compile Include="AutoCrafterNamespace\UI\UIBase.cs" />
     <Compile Include="AutoCrafterNamespace\Utility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
