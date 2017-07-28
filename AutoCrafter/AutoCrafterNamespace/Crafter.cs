@@ -85,7 +85,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			// Add a hidden inventory slot in output container to prevent it from despawning when closing empty loot.
 			outputInventory.capacity = 37;
-			var item = ItemManager.Create(ItemManager.FindItemDefinition("rock"), 1);
+			var item = ItemManager.Create(ItemManager.FindItemDefinition("gears"), 1);
 			item.MoveToContainer(outputInventory, outputInventory.capacity - 1);
 			
 			var rigidBody = outputContainer.GetComponent<Rigidbody>();
