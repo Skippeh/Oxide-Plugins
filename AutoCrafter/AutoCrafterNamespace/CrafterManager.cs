@@ -253,14 +253,11 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{
 				UiManager.AddPlayerUI(activeCrafterUi, player);
 			}
-
-			Debug.Log(numActiveCrafters[player]);
 		}
 
 		private static void OnPlayerLeaveCrafter(Crafter crafter, BasePlayer player)
 		{
 			numActiveCrafters[player]--;
-			Debug.Log(numActiveCrafters[player]);
 
 			if (numActiveCrafters[player] <= 0)
 			{
