@@ -117,11 +117,11 @@ namespace Oxide.Plugins
 
 		private object OnHammerHit(BasePlayer player, HitInfo info)
 		{
-			BaseEntity entity = info.HitEntity;
+			var entity = info.HitEntity as BaseCombatEntity;
 			var recycler = entity as Recycler;
 			var researchTable = entity as ResearchTable;
 
-			if ((recycler == null && researchTable == null) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission) || player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
+			if (entity == null || (recycler == null && researchTable == null) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission) || player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
 				return null;
 
 			if (entity.OwnerID != player.userID)
@@ -129,6 +129,14 @@ namespace Oxide.Plugins
 				player.ShowScreenMessage("You need to be the owner.", 3f);
 				return null;
 			}
+
+			// Make sure entity is full health, or allow it if repairing is disabled.
+			if (entity.Health() < entity.MaxHealth() && entity.repair.enabled)
+				return null;
+
+			// Don't allow upgrading/downgrading if there's less than 8 seconds since the entity was attacked.
+			if (entity.SecondsSinceAttacked < 8)
+				return null;
 
 			if (researchTable != null) // Upgrade to crafter (if less than 10 minutes since placement)
 			{
@@ -213,14 +221,6 @@ namespace Oxide.Plugins
 		// - anything else: prevent default behaviour.
 		private object HandleUpgradeRequest(BasePlayer player, ResearchTable researchTable)
 		{
-			// Make sure research table is full health, or allow it if repairing is disabled.
-			if (researchTable.Health() < researchTable.MaxHealth() && researchTable.repair.enabled)
-				return null;
-
-			// Don't allow upgrading if there's less than 8 seconds since the research table was attacked.
-			if (researchTable.SecondsSinceAttacked < 8)
-				return null;
-
 			if (UpgradeCost.Count > 0)
 			{
 				if (!player.CanCraft(UpgradeCost))
