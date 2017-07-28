@@ -67,17 +67,15 @@ namespace Oxide.Plugins
 				if (taskid == -1)
 					return null;
 
-				var crafter = CrafterManager.FindByPlayer(player);
+				var crafters = CrafterManager.FindAllByPlayer(player);
 
-				if (crafter == null)
-					return null;
-
-				if (!crafter.CancelByTaskId(player, taskid))
+				foreach (var crafter in crafters)
 				{
-					arg.ReplyWith("Could not cancel the specified task.");
+					if (crafter.CancelByTaskId(player, taskid))
+						return true;
 				}
 
-				return true;
+				return null;
 			}
 
 			return null;

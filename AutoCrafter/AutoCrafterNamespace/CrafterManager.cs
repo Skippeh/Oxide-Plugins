@@ -202,7 +202,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		}
 
 		/// <summary>
-		/// Returns the crafter that's within range of the given player. If there's multiple then the closest one will be returned.
+		/// Returns the crafter that's within range and visible by the given player. If there's multiple then the closest one will be returned.
 		/// </summary>
 		public static Crafter FindByPlayer(BasePlayer player)
 		{
@@ -210,6 +210,20 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			var crafters = Crafters.OrderBy(kv => (player.ServerPosition - kv.Key).sqrMagnitude);
 			return crafters.FirstOrDefault(kv => kv.Value.NearbyPlayers.Contains(player)).Value;
 		}
+
+		/// <summary>
+		/// Returns all crafters that are within range and visible by the given player. They will be sorted by ascending range.
+		/// </summary>
+		public static IEnumerable<Crafter> FindAllByPlayer(BasePlayer player)
+		{
+			var crafters = Crafters.OrderBy(kv => (player.ServerPosition - kv.Key).sqrMagnitude);
+
+			foreach (var kv in crafters)
+			{
+				if (kv.Value.NearbyPlayers.Contains(player))
+					yield return kv.Value;
+			}
+		} 
 
 		#endregion
 
