@@ -5,6 +5,7 @@ using System.Linq;
 using Apex;
 using Newtonsoft.Json.Linq;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
+using Oxide.Plugins.AutoCrafterNamespace.UI;
 using UnityEngine;
 
 namespace Oxide.Plugins.AutoCrafterNamespace
@@ -17,12 +18,21 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		private static float lastTick;
 		private static Timer tickTimer;
 
+		private static ActiveCrafterUI activeCrafterUi;
+
+		/// <summary>
+		/// Keeps track of how many crafters a player is in range of.
+		/// </summary>
+		private static readonly Dictionary<BasePlayer, int> numActiveCrafters = new Dictionary<BasePlayer, int>();  
+
 		#region Initialization, destruction and save/loading
 
 		public static void Initialize()
 		{
 			lastTick = Time.time;
 			tickTimer = Utility.Timer.Every(0.2f, Tick); // Tick every 200ms
+
+			activeCrafterUi = UiManager.CreateUI<ActiveCrafterUI>();
 		}
 
 		public static void Destroy()
@@ -36,6 +46,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			
 			Crafters.Clear();
 			crafterLookup.Clear();
+			UiManager.DestroyUI(activeCrafterUi);
 		}
 
 		public static void Save()
@@ -111,6 +122,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		public static Crafter CreateCrafter(Recycler recycler)
 		{
 			var crafter = new Crafter(recycler);
+			crafter.PlayerEnter += OnPlayerEnterCrafter;
+			crafter.PlayerLeave += OnPlayerLeaveCrafter;
 
 			var gears = ItemManager.Create(ItemManager.FindItemDefinition("gears"), Constants.RecyclerNumInputSlots);
 
@@ -148,6 +161,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				}
 
 				Debug.Log("Found.");
+
+				crafter.PlayerEnter -= OnPlayerEnterCrafter;
+				crafter.PlayerLeave -= OnPlayerLeaveCrafter;
 			}
 
 			crafterLookup.Remove(crafter.Recycler);
@@ -216,6 +232,31 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{
 				crafter.Tick(elapsed);
 			});
+		}
+
+		private static void OnPlayerEnterCrafter(Crafter crafter, BasePlayer player)
+		{
+			if (!numActiveCrafters.ContainsKey(player))
+				numActiveCrafters[player] = 0;
+
+			numActiveCrafters[player]++;
+
+			// Only add ui for the first crafter, otherwise we'll add the player multiple times.
+			if (numActiveCrafters[player] == 1)
+			{
+				UiManager.AddPlayerUI(activeCrafterUi, player);
+			}
+		}
+
+		private static void OnPlayerLeaveCrafter(Crafter crafter, BasePlayer player)
+		{
+			numActiveCrafters[player]--;
+
+			if (numActiveCrafters[player] <= 0)
+			{
+				numActiveCrafters.Remove(player);
+				UiManager.RemoveUI(activeCrafterUi, player);
+			}
 		}
 	}
 }

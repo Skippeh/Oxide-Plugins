@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
+using Oxide.Plugins.AutoCrafterNamespace.UI;
 using Rust;
 using UnityEngine;
 
@@ -10,6 +12,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 {
 	public class Crafter
 	{
+		public delegate void PlayerEnterDelegate(Crafter crafter, BasePlayer player);
+		public delegate void PlayerLeaveDelegate(Crafter crafter, BasePlayer player);
+
 		public class CraftTask
 		{
 			public readonly int TaskID;
@@ -49,6 +54,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		[JsonIgnore]
 		public DroppedItemContainer Output => outputContainer;
+
+		public event PlayerEnterDelegate PlayerEnter;
+		public event PlayerLeaveDelegate PlayerLeave;
 
 		// Lookup table for players on each crafting task.
 		private readonly Dictionary<BasePlayer, Dictionary<CraftTask, int>> taskLookup = new Dictionary<BasePlayer, Dictionary<CraftTask, int>>();
@@ -290,6 +298,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{
 				SendCraftingList(player);
 			}
+
+			PlayerEnter?.Invoke(this, player);
 		}
 
 		/// <summary>
@@ -298,6 +308,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		private void OnPlayerLeave(BasePlayer player)
 		{
 			SendClearCraftingList(player);
+			PlayerLeave?.Invoke(this, player);
 		}
 
 		private void SendCraftingList(BasePlayer player)

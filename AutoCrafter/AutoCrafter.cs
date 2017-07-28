@@ -91,6 +91,7 @@ namespace Oxide.Plugins
 		
 		private void OnServerInitialized()
 		{
+			UiManager.Initialize();
 			Lang.Initialize(this, lang);
 			FxManager.Initialize();
 			CrafterManager.Initialize();
@@ -106,6 +107,7 @@ namespace Oxide.Plugins
 		{
 			FxManager.Destroy();
 			CrafterManager.Destroy();
+			UiManager.Destroy();
 		}
 
 		private object OnRecycleItem(Recycler recycler, Item item)
