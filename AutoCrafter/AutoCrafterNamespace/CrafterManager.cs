@@ -228,10 +228,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			float elapsed = Time.time - lastTick; // Elapsed time in seconds since last tick.
 			lastTick = Time.time;
 
-			Crafters.Values.ToList().ForEach(crafter =>
+			foreach (var crafter in Crafters.Values.ToList())
 			{
+				if (crafter.Recycler.IsDestroyed)
+					continue;
+
 				crafter.Tick(elapsed);
-			});
+			}
 		}
 
 		private static void OnPlayerEnterCrafter(Crafter crafter, BasePlayer player)
