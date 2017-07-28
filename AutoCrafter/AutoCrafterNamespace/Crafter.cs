@@ -216,7 +216,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			List<BasePlayer> nearPlayers = new List<BasePlayer>();
 
 			Vector3 checkPosition = Position + Recycler.transform.up * 0.75f;
-			float checkRadius = 2.5f;
+			float checkRadius = Constants.CrafterNearRadius;
 			Vis.Entities(checkPosition, checkRadius, nearPlayers);
 
 			var previousNearbyPlayers = NearbyPlayers.ToList(); // Nearby players last tick

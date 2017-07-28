@@ -8,5 +8,6 @@
 		public const string StackSoundFxPrefab = "assets/bundled/prefabs/fx/notice/stack.world.fx.prefab";
 
 		public const int RecyclerNumInputSlots = 6;
+		public const float CrafterNearRadius = 2.5f;
 	}
 }
