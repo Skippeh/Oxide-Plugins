@@ -121,7 +121,7 @@ namespace Oxide.Plugins
 			var recycler = entity as Recycler;
 			var researchTable = entity as ResearchTable;
 
-			if ((recycler == null && researchTable == null) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission))
+			if ((recycler == null && researchTable == null) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission) || player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
 				return null;
 
 			if (entity.OwnerID != player.userID)
