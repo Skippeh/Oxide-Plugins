@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-	[Info("Furnace Splitter", "Skipcast", "2.1.0", ResourceId = 2406)]
+	[Info("Furnace Splitter", "Skipcast", "2.1.1", ResourceId = 2406)]
 	[Description("Splits up resources in furnaces automatically and shows useful furnace information.")]
 	public class FurnaceSplitter : RustPlugin
 	{
@@ -121,7 +121,8 @@ namespace Oxide.Plugins
 			"furnace",
 			"furnace.large",
 			"campfire",
-			"refinery_small_deployed"
+			"refinery_small_deployed",
+			"hobobarrel_static"
 		};
 		
 		private void OnPlayerDisconnected(BasePlayer player, string reason)
@@ -209,14 +210,25 @@ namespace Oxide.Plugins
 				allPlayerOptions[player.userID] = new PlayerOptions
 				{
 					Enabled = true,
-					TotalStacks = new Dictionary<string, int>
-					{
-						{ "furnace", 3 },
-						{ "furnace.large", 15 },
-						{ "campfire", 2 },
-						{ "refinery_small_deployed", 4 }
-					}
+					TotalStacks = new Dictionary<string, int>()
 				};
+			}
+			
+			var initialStackOptions = new Dictionary<string, int>
+			{
+				{"furnace", 3},
+				{"furnace.large", 15},
+				{"campfire", 2},
+				{"refinery_small_deployed", 4},
+				{"hobobarrel_static", 2}
+			};
+
+			var options = allPlayerOptions[player.userID];
+
+			foreach (var kv in initialStackOptions)
+			{
+				if (!options.TotalStacks.ContainsKey(kv.Key))
+					options.TotalStacks.Add(kv.Key, kv.Value);
 			}
 		}
 
