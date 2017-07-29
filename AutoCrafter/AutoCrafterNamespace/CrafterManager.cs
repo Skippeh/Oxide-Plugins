@@ -45,7 +45,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			foreach (var crafter in Crafters.Values)
 			{
-				crafter.Downgrade(true);
+				crafter.Downgrade(true, true);
 			}
 			
 			Crafters.Clear();
@@ -154,7 +154,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// </summary>
 		/// <param name="crafter">The crafter to destroy.</param>
 		/// <param name="downgrade">If true, then the recycler will be replaced with a research table.</param>
-		public static void DestroyCrafter(Crafter crafter, bool downgrade, bool destroyOutputContainer)
+		public static void DestroyCrafter(Crafter crafter, bool downgrade, bool destroyOutputContainer, bool unloading = false)
 		{
 			if (!Crafters.Remove(crafter.Position))
 			{
@@ -181,7 +181,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			}
 			else
 			{
-				crafter.Destroy(destroyOutputContainer);
+				crafter.Destroy(destroyOutputContainer, unloading);
 			}
 		}
 

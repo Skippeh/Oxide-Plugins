@@ -152,7 +152,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		}
 		
 		/// <param name="unloading">Specify true if the plugin is unloading.</param>
-		public void Destroy(bool destroyOutputContainer)
+		public void Destroy(bool destroyOutputContainer, bool unloading = false)
 		{
 			resetDespawnTimer.DestroyToPool();
 
@@ -161,25 +161,28 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				OnPlayerLeave(player);
 			}
 
-			// Drop queue items
-			if (CraftingTasks.Count > 0)
+			if (!unloading)
 			{
-				var container = new ItemContainer();
-				container.ServerInitialize(null, 36);
-
-				foreach (var task in CraftingTasks)
+				// Drop queue items
+				if (CraftingTasks.Count > 0)
 				{
-					foreach (var ingredient in task.Blueprint.ingredients)
-					{
-						var item = ItemManager.CreateByItemID(ingredient.itemid, (int) ingredient.amount * task.Amount);
-						
-						if (!item.MoveToContainer(container))
-							item.Drop(Position + Recycler.transform.up * 1.25f, Recycler.GetDropVelocity(), Recycler.ServerRotation);
-					}
-				}
+					var container = new ItemContainer();
+					container.ServerInitialize(null, 36);
 
-				var droppedContainer = container.Drop(Constants.ItemDropPrefab, Position + Recycler.transform.up * 1.25f, Recycler.ServerRotation);
-				droppedContainer.playerName = "Queue items";
+					foreach (var task in CraftingTasks)
+					{
+						foreach (var ingredient in task.Blueprint.ingredients)
+						{
+							var item = ItemManager.CreateByItemID(ingredient.itemid, (int) ingredient.amount * task.Amount);
+
+							if (!item.MoveToContainer(container))
+								item.Drop(Position + Recycler.transform.up * 1.25f, Recycler.GetDropVelocity(), Recycler.ServerRotation);
+						}
+					}
+
+					var droppedContainer = container.Drop(Constants.ItemDropPrefab, Position + Recycler.transform.up * 1.25f, Recycler.ServerRotation);
+					droppedContainer.playerName = "Queue items";
+				}
 			}
 
 			Recycler.Kill();
@@ -281,7 +284,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		{
 			List<BasePlayer> nearPlayers = new List<BasePlayer>();
 
-			Vector3 checkPosition = Position + Recycler.transform.up * 0.75f;
+			Vector3 checkPosition = Position + Recycler.transform.up * 0.75f + Recycler.transform.forward * 1f + Recycler.transform.right * -0.2f;
 			float checkRadius = Constants.CrafterNearRadius;
 			Vis.Entities(checkPosition, checkRadius, nearPlayers);
 
@@ -322,12 +325,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				NearbyPlayers.Add(player);
 				OnPlayerEnter(player);
 			}
-
-			/*if (NearbyPlayers.Count > 0)
-			{
-				Debug.Log(NearbyPlayers.Count);
-			}*/
-
+			
 			/*foreach (var player in BasePlayer.activePlayerList)
 			{
 				player.SendConsoleCommand("ddraw.sphere", 0.5f, Color.red, checkPosition, checkRadius);
@@ -533,14 +531,14 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// <summary>
 		/// Replaces the recycler with a research table and then destroys the crafter. Default behaviour will drop the output loot onto the ground.
 		/// </summary>
-		public void Downgrade(bool destroyOutputContainer = false)
+		public void Downgrade(bool destroyOutputContainer = false, bool unloading = false)
 		{
 			var researchTableEntity = GameManager.server.CreateEntity(Constants.DeployedResearchTablePrefab, Recycler.ServerPosition, Recycler.ServerRotation);
 			var researchTable = researchTableEntity.GetComponent<ResearchTable>();
 			researchTable.OwnerID = Recycler.OwnerID; // Copy ownership to research table.
 			researchTable.Spawn();
 
-			Destroy(destroyOutputContainer);
+			Destroy(destroyOutputContainer, unloading);
 		}
 
 		#endregion

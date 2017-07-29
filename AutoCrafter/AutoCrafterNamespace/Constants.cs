@@ -10,7 +10,7 @@
 		public const string UpgradeMetalFxPrefab = "assets/bundled/prefabs/fx/build/promote_metal.prefab";
 
 		public const int RecyclerNumInputSlots = 6;
-		public const float CrafterNearRadius = 2.5f;
+		public const float CrafterNearRadius = 0.6f;
 		public const float HammerConfirmTime = 2f;
 		public const float TimeToUpgrade = 600f;
 
