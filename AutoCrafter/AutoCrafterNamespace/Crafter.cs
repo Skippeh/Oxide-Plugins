@@ -527,23 +527,22 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		public CraftTask AddCraftTask(ItemBlueprint blueprint, int amount, int skinId = 0, bool startRecycler = true)
 		{
-			// Merge with current craft queue if the current crafting item is the same blueprint and skin id.
-			if (CraftingTasks.Count > 0)
+			bool wasEmpty = CraftingTasks.Count == 0;
+
+			// Merge with current craft queue if the item is in queue with matching skin.
+			var currentTask = CraftingTasks.FirstOrDefault(task => task.Blueprint.targetItem.itemid == blueprint.targetItem.itemid && task.SkinID == skinId);
+
+			if (currentTask != null)
 			{
-				var currentTask = CraftingTasks.First();
+				currentTask.Amount += amount;
 
-				if (currentTask.Blueprint == blueprint && currentTask.SkinID == skinId)
+				// Send new amount to all players
+				foreach (var player in NearbyPlayers)
 				{
-					currentTask.Amount += amount;
-
-					// Send new amount to all players
-					foreach (var player in NearbyPlayers)
-					{
-						SendUpdateCraftingTask(player, currentTask);
-					}
-
-					return currentTask;
+					SendCraftingTaskProgress(player, currentTask);
 				}
+
+				return currentTask;
 			}
 
 			var craftTask = new CraftTask(blueprint, amount, skinId);
