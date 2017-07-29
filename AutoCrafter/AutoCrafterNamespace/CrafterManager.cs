@@ -75,7 +75,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				List<BaseEntity> entities = new List<BaseEntity>();
 				Vis.Entities(position, 0.1f, entities); // Find all entities within 0.1 game units of the saved position.
 
-				// Compare entity positions and take the first research table that is within 0.001 units of the saved position.
+				// Compare entity positions and take the first research table or recycler that is within 0.001 units of the saved position.
 				float maxDistanceSqr = 0.001f * 0.001f;
 				var baseEntity = entities.FirstOrDefault(ent => (ent is ResearchTable || ent is Recycler) && (position - ent.ServerPosition).sqrMagnitude <= maxDistanceSqr) as BaseEntity;
 
