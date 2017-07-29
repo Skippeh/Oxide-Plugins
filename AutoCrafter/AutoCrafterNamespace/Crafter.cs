@@ -564,7 +564,6 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			instance.Spawn();
 			CodeLock = instance;
 			
-			FxManager.PlayFx(CodeLock.ServerPosition, Constants.CodelockPlaceSoundPrefab);
 			return true;
 		}
 

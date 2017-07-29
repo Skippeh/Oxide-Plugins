@@ -188,6 +188,7 @@ namespace Oxide.Plugins
 				if (crafter.AddCodelock())
 				{
 					activeItem.UseItem();
+					FxManager.PlayFx(crafter.CodeLock.ServerPosition, Constants.CodelockPlaceSoundPrefab);
 				}
 			}
 		}
