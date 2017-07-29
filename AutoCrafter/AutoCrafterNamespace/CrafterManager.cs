@@ -77,15 +77,15 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 				// Compare entity positions and take the first research table that is within 0.001 units of the saved position.
 				float maxDistanceSqr = 0.001f * 0.001f;
-				var researchTable = entities.FirstOrDefault(ent => ent is ResearchTable && (position - ent.ServerPosition).sqrMagnitude <= maxDistanceSqr) as ResearchTable;
+				var baseEntity = entities.FirstOrDefault(ent => (ent is ResearchTable || ent is Recycler) && (position - ent.ServerPosition).sqrMagnitude <= maxDistanceSqr) as BaseEntity;
 
-				if (researchTable == null)
+				if (baseEntity == null)
 				{
-					Debug.LogWarning("Unable to load crafter; research table at saved position was not found. (" + position.ToString("0.########") + ")");
+					Debug.LogWarning("Unable to load crafter; research table or recycler at saved position was not found. (" + position.ToString("0.########") + ")");
 					continue;
 				}
 
-				var crafter = CreateCrafter(researchTable);
+				var crafter = baseEntity is Recycler ? CreateCrafter((Recycler) baseEntity) : CreateCrafter((ResearchTable) baseEntity);
 				crafter.CreationTime = jCrafter["CreationTime"].ToObject<DateTime>();
 
 				++loadedCount;
