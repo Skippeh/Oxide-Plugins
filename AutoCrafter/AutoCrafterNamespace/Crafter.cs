@@ -299,6 +299,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 							Recycler.StopRecycling();
 						}
 					}
+					else
+					{
+						foreach (var player in NearbyPlayers)
+						{
+							SendCraftingTaskProgress(player, currentTask);
+						}
+					}
 				}
 			}
 		}
@@ -383,6 +390,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			
 			// Keep all players that are the following:
 			// - Alive and not sleeping
+			// - Has codelock access
 			// - Can see the recycler from their position, aka not behind a wall or anything
 			nearPlayers = nearPlayers.Where(plr => plr.IsAlive() && !plr.IsSleeping() && PlayerCanAccess(plr) && Recycler.IsVisible(plr.ServerPosition)).ToList();
 
@@ -462,7 +470,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		{
 			var crafting = player.inventory.crafting;
 			crafting.taskUID++;
-			player.Command("note.craft_add", crafting.taskUID, task.Blueprint.targetItem.itemid);
+
+			// The reason for always sending 2 as amount is because if a craft task is started with 1 item, the amount counter won't show in clientside, even if amount is incremented later.
+			// The real amount will be sent straight after, but then it will show with the counte, even if there's only 1.
+			player.Command("note.craft_add", crafting.taskUID, task.Blueprint.targetItem.itemid, 2, task.SkinID);
+
+			// Correct the craft amount.
+			player.Command("note.craft_done", crafting.taskUID, 0, task.Amount);
 
 			var dict = GetTaskLookupDict(player);
 			dict.Add(task, crafting.taskUID);
@@ -473,6 +487,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			var lookup = GetTaskLookupDict(player);
 			int taskUID = lookup[task];
 			player.Command("note.craft_start", taskUID, task.Blueprint.time - task.Elapsed, task.Amount);
+		}
+
+		private void SendCraftingTaskProgress(BasePlayer player, CraftTask task)
+		{
+			var lookup = GetTaskLookupDict(player);
+			var taskUID = lookup[task];
+			player.Command("note.craft_done", taskUID, 0, task.Amount);
 		}
 
 		private void SendClearCraftingList(BasePlayer player)
