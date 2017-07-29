@@ -46,12 +46,6 @@
     <Reference Include="ConvexHull">
       <HintPath>%RustServerDev%\RustDedicated_Data\Managed\ConvexHull.dll</HintPath>
     </Reference>
-    <Reference Include="EasyAntiCheat.Client">
-      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\EasyAntiCheat.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="EasyAntiCheat.Server">
-      <HintPath>%RustServerDev%\RustDedicated_Data\Managed\EasyAntiCheat.Server.dll</HintPath>
-    </Reference>
     <Reference Include="Facepunch.Console">
       <HintPath>%RustServerDev%\RustDedicated_Data\Managed\Facepunch.Console.dll</HintPath>
     </Reference>
