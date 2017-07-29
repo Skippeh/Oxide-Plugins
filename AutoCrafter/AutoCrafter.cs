@@ -463,6 +463,13 @@ namespace Oxide.Plugins
 				player.GiveItem(ItemManager.CreateByItemID(itemAmount.itemid, (int) itemAmount.amount));
 			}
 
+			// Refund codelock if one is attached
+			if (crafter.CodeLock != null)
+			{
+				var item = ItemManager.Create(ItemManager.FindItemDefinition("lock.code"));
+				player.GiveItem(item);
+			}
+
 			return true;
 		}
 	}
