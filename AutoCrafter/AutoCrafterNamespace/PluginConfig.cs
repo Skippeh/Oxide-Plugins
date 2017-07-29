@@ -44,7 +44,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			1, // Radiation
 			0.99f, // Bite
 			0.98f, // Stab
-			0.6f, // Explosion
+			0.3f, // Explosion
 			0, // RadiationExposure
 			0, // ColdExposure
 			0, // Decay
