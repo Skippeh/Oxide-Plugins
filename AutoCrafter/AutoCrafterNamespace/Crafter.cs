@@ -158,7 +158,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			foreach (var player in NearbyPlayers)
 			{
-				SendClearCraftingList(player);
+				OnPlayerLeave(player);
 			}
 			
 			Recycler.Kill();
