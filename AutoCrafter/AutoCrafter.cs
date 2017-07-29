@@ -189,13 +189,14 @@ namespace Oxide.Plugins
 				return "HP: " + entity.Health().ToString("0") + "/" + entity.MaxHealth();
 			};
 
-			// Don't allow upgrading/downgrading if there's less than 8 seconds since the entity was attacked.
-			// Only allow upgrading/downgrading if we have building permission.
-
-			if (entity.SecondsSinceAttacked < 8 || player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
+			// Don't allow upgrading/downgrading/repairing if there's less than 8 seconds since the entity was attacked.
+			if (entity.SecondsSinceAttacked < 8)
 			{
-				// Show hp info if repairing is blocked.
-				player.ShowScreenMessage(hpMessage(), 2);
+				if (recycler != null && CrafterManager.ContainsRecycler(recycler))
+				{
+					// Show hp info if repairing is blocked.
+					player.ShowScreenMessage(hpMessage(), 2);
+				}
 				return null;
 			}
 
@@ -216,8 +217,12 @@ namespace Oxide.Plugins
 			// Only allow upgrading/downgrading if we have building permission.
 			if (player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
 			{
-				// Show hp info if building blocked.
-				player.ShowScreenMessage(hpMessage(), 2);
+				if (recycler != null && CrafterManager.ContainsRecycler(recycler)) // Only show hp info if this is a crafter
+				{
+					// Show hp info if building blocked.
+					player.ShowScreenMessage(hpMessage(), 2);
+				}
+
 				return null;
 			}
 
