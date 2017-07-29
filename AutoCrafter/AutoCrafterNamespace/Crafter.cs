@@ -63,6 +63,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		public CodeLock CodeLock { get; private set; }
 
 		#region Json exclusive properties for saving/loading
+
 		[JsonProperty("Code")]
 		private string _code => CodeLock?.code;
 
@@ -133,7 +134,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		private void CreateOutputContainer()
 		{
-			Vector3 outputPosition = Position + (Recycler.transform.forward * 0.4f) + (Recycler.transform.up * 0.72f) + (Recycler.transform.right * -0.25f);
+			Vector3 outputPosition = Position + (Recycler.transform.forward * 0f) + (Recycler.transform.up * 0.72f) + (Recycler.transform.right * -0.25f);
 			Quaternion outputRotation = Recycler.ServerRotation * Quaternion.Euler(90, 0, 0);
 
 			outputContainer = (DroppedItemContainer) GameManager.server.CreateEntity(Constants.ItemDropPrefab, outputPosition, outputRotation);
@@ -558,7 +559,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			if (CodeLock != null)
 				return false;
 
-			var instance = (CodeLock) GameManager.server.CreateEntity(Constants.CodelockPrefab, Position + (Recycler.transform.forward * 0.605f) + (Recycler.transform.up * 0.75f) + (Recycler.transform.right * -0.25f), Recycler.ServerRotation * Quaternion.Euler(0, -90, 0));
+			var instance = (CodeLock) GameManager.server.CreateEntity(Constants.CodelockPrefab, Position + (Recycler.transform.forward * 0.41f) + (Recycler.transform.up * 0.747f) + (Recycler.transform.right * -0.749f), Recycler.ServerRotation * Quaternion.Euler(0, -90, 0));
 			instance.enableSaving = false;
 			instance.Spawn();
 			CodeLock = instance;
