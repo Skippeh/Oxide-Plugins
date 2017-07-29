@@ -559,7 +559,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			if (CodeLock != null)
 				return false;
 
-			var instance = (CodeLock) GameManager.server.CreateEntity(Constants.CodelockPrefab, Position + (Recycler.transform.forward * 0.41f) + (Recycler.transform.up * 0.747f) + (Recycler.transform.right * -0.749f), Recycler.ServerRotation * Quaternion.Euler(0, -90, 0));
+			var instance = (CodeLock) GameManager.server.CreateEntity(Constants.CodelockPrefab, Position + (Recycler.transform.forward * 0.41f) + (Recycler.transform.up * 0.747f) + (Recycler.transform.right * 0.273f), Recycler.ServerRotation * Quaternion.Euler(0, -90, 0));
 			instance.enableSaving = false;
 			instance.Spawn();
 			CodeLock = instance;
