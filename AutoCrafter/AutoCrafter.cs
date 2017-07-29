@@ -185,7 +185,7 @@ namespace Oxide.Plugins
 				if (crafter == null)
 					return;
 
-				if (crafter.AddCodelock())
+				if (crafter.AddCodeLock())
 				{
 					activeItem.UseItem();
 					FxManager.PlayFx(crafter.CodeLock.ServerPosition, Constants.CodelockPlaceSoundPrefab);

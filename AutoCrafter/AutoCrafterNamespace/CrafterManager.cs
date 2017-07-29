@@ -93,7 +93,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 				if (hasCodeLock)
 				{
-					crafter.AddCodelock();
+					crafter.AddCodeLock();
 					var codeLock = crafter.CodeLock;
 
 					string code = jCrafter["Code"].ToObject<string>();

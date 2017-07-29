@@ -560,7 +560,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// <summary>
 		/// Adds a codelock to this crafter.
 		/// </summary>
-		public bool AddCodelock()
+		public bool AddCodeLock()
 		{
 			if (CodeLock != null)
 				return false;
