@@ -319,9 +319,46 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 						var worldItem = (WorldItem) entity;
 
-						if (worldItem.item.MoveToContainer(outputInventory))
+						/*if (worldItem.item.MoveToContainer(outputInventory))
 						{
 							nextPickup = Time.time + pickupDelay;
+							FxManager.PlayFx(worldItem.ServerPosition, Constants.StackSoundFxPrefab);
+						}*/
+
+						bool partiallyInserted = false;
+
+						for (int i = 0; i < outputInventory.capacity - 1; ++i)
+						{
+							var slot = outputInventory.GetSlot(i);
+							if (slot == null)
+							{
+								worldItem.item.MoveToContainer(outputInventory, i);
+								partiallyInserted = true;
+								break;
+							}
+
+							if (slot.info == worldItem.item.info && slot.skin == worldItem.item.skin && slot.amount < slot.info.stackable)
+							{
+								int available = slot.info.stackable - slot.amount;
+								int toMove = Math.Min(available, worldItem.item.amount);
+								worldItem.item.amount -= toMove;
+								slot.amount += toMove;
+
+								slot.MarkDirty();
+
+								partiallyInserted = true;
+
+								if (worldItem.item.amount <= 0)
+								{
+									worldItem.item.Remove();
+									worldItem.Kill();
+									break;
+								}
+							}
+						}
+
+						if (partiallyInserted)
+						{
 							FxManager.PlayFx(worldItem.ServerPosition, Constants.StackSoundFxPrefab);
 						}
 					}
