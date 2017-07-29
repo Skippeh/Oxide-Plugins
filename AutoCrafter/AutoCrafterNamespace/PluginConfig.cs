@@ -25,5 +25,31 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			new ItemAmount("techparts", 3),
 			new ItemAmount("gears", 3)
 		};
+
+		public float[] CrafterProtectionProperties { get; set; } =
+		{
+			0.98f, // Generic
+			0, // Hunger
+			0, // Thirst
+			0, // Cold
+			0, // Drowned
+			1, // Heat
+			0, // Bleeding
+			0, // Poison
+			0, // Suicide
+			0.999f, // Bullet
+			0.99f, // Slash
+			0.99f, // Blunt
+			0, // Fall
+			1, // Radiation
+			0.99f, // Bite
+			0.98f, // Stab
+			0.6f, // Explosion
+			0, // RadiationExposure
+			0, // ColdExposure
+			0, // Decay
+			0, // ElectricShock
+			1 // Arrow
+		};
 	}
 }

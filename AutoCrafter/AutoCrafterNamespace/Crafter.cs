@@ -59,6 +59,11 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		public event PlayerEnterDelegate PlayerEnter;
 		public event PlayerLeaveDelegate PlayerLeave;
 
+		/// <summary>
+		/// Gets or sets the time this was created in UTC.
+		/// </summary>
+		public DateTime CreationTime { get; set; }
+
 		// Lookup table for players on each crafting task.
 		private readonly Dictionary<BasePlayer, Dictionary<CraftTask, int>> taskLookup = new Dictionary<BasePlayer, Dictionary<CraftTask, int>>();
 		
@@ -73,6 +78,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// <param name="recycler">The recycler entity we're "overwriting".</param>
 		public Crafter(Recycler recycler)
 		{
+			CreationTime = DateTime.UtcNow;
+
 			Recycler = recycler;
 
 			CreateOutputContainer();
@@ -86,6 +93,21 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			recycler.gameObject.AddComponent<GroundWatch>();
 			recycler.gameObject.AddComponent<DestroyOnGroundMissing>();
+
+			recycler.repair.enabled = true;
+			recycler.repair.itemTarget = ItemManager.FindItemDefinition("wall.frame.shopfront.metal");
+			
+			// Set health to 1000
+			Recycler._maxHealth = 1000;
+			Recycler.health = recycler.MaxHealth();
+
+			// Set up damage protection
+			Recycler.baseProtection.density = 4;
+			
+			for (int i = 0; i < Recycler.baseProtection.amounts.Length; ++i)
+			{
+				Recycler.baseProtection.amounts[i] = Utility.Config.CrafterProtectionProperties[i];
+			}
 		}
 
 		private void CreateOutputContainer()

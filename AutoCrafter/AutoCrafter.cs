@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using Oxide.Plugins.AutoCrafterNamespace;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
+using Rust;
+using Network = UnityEngine.Network;
 
 namespace Oxide.Plugins
 {
@@ -11,6 +14,13 @@ namespace Oxide.Plugins
 	public class AutoCrafter : RustPlugin
 	{
 		private readonly List<ItemAmount> UpgradeCost = new List<ItemAmount>();
+
+		/// <summary>
+		/// Used for keeping track of when research tables were placed so we know if enough time has passed that upgrading is impossible.
+		/// </summary>
+		private readonly List<BaseEntity> upgradeableEntities = new List<BaseEntity>();
+
+		private bool serverInitialized = false;
 
 		#region Rust hooks
 
@@ -64,16 +74,44 @@ namespace Oxide.Plugins
 				return;
 
 			// Empty recycler, otherwise the hidden items inside it will drop into the world.
-			foreach (var item in recycler.inventory.itemList)
-			{
-				item.Remove();
-			}
-
+			recycler.inventory.Clear();
 			recycler.inventory.itemList.Clear();
+		}
+
+		void OnEntitySpawned(BaseNetworkable networkable)
+		{
+			if (!serverInitialized) // Check if server is initialized. This hook tends to call on startup before OnServerInitialized has been called.
+				return;
+
+			var entity = networkable as BaseEntity;
+
+			if (entity == null)
+				return;
+
+			if (entity.OwnerID == 0)
+				return;
+
+			var researchTable = entity as ResearchTable;
+
+			if (researchTable == null)
+				return;
+			
+			upgradeableEntities.Add(researchTable);
+			timer.Once(Constants.TimeToUpgrade, () => upgradeableEntities.Remove(researchTable));
 		}
 
 		void OnEntityKill(BaseNetworkable entity)
 		{
+			if (!serverInitialized) // Check if server is initialized. This hook tends to call on startup before OnServerInitialized has been called.
+				return;
+
+			var researchTable = entity as ResearchTable;
+
+			if (researchTable != null)
+			{
+				upgradeableEntities.Remove(researchTable);
+			}
+
 			var recycler = entity as Recycler;
 
 			if (recycler == null)
@@ -85,6 +123,28 @@ namespace Oxide.Plugins
 				return;
 
 			CrafterManager.DestroyCrafter(crafter, false, false);
+		}
+
+		void OnEntityTakeDamage(BaseCombatEntity entity, HitInfo info)
+		{
+			float newHealth = entity.Health() - info.damageTypes.Total();
+
+			// Empty recycler inventory if it's about to be killed to avoid dropping hidden items.
+			if (newHealth <= 0)
+			{
+				var recycler = entity as Recycler;
+
+				if (!(entity is Recycler))
+					return;
+
+				var crafter = CrafterManager.GetCrafter(recycler);
+
+				if (crafter == null)
+					return;
+
+				recycler.inventory.Clear();
+				recycler.inventory.itemList.Clear();
+			}
 		}
 
 		private object OnServerCommand(ConsoleSystem.Arg arg)
@@ -120,26 +180,59 @@ namespace Oxide.Plugins
 			var entity = info.HitEntity as BaseCombatEntity;
 			var recycler = entity as Recycler;
 			var researchTable = entity as ResearchTable;
-
-			if (entity == null || (recycler == null && researchTable == null) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission) || player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
+			
+			if (entity == null || (recycler == null && researchTable == null))
 				return null;
 
-			if (entity.OwnerID != player.userID)
+			Func<string> hpMessage = () =>
 			{
-				player.ShowScreenMessage("You need to be the owner.", 3f);
+				return "HP: " + entity.Health().ToString("0") + "/" + entity.MaxHealth();
+			};
+
+			// Don't allow upgrading/downgrading if there's less than 8 seconds since the entity was attacked.
+			// Only allow upgrading/downgrading if we have building permission.
+
+			if (entity.SecondsSinceAttacked < 8 || player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
+			{
+				// Show hp info if repairing is blocked.
+				player.ShowScreenMessage(hpMessage(), 2);
 				return null;
 			}
 
-			// Make sure entity is full health, or allow it if repairing is disabled.
-			if (entity.Health() < entity.MaxHealth() && entity.repair.enabled)
-				return null;
+			// Make sure entity is full health, otherwise repair.
+			if (entity.Health() < entity.MaxHealth())
+			{
+				if (recycler == null)
+					return null;
 
-			// Don't allow upgrading/downgrading if there's less than 8 seconds since the entity was attacked.
-			if (entity.SecondsSinceAttacked < 8)
-				return null;
+				if (!CrafterManager.ContainsRecycler(recycler))
+					return null;
 
+				entity.DoRepair(player);
+				player.ShowScreenMessage(hpMessage(), 2);
+				return true;
+			}
+
+			// Only allow upgrading/downgrading if we have building permission.
+			if (player.IsBuildingBlocked(entity.ServerPosition, entity.ServerRotation, entity.bounds))
+			{
+				// Show hp info if building blocked.
+				player.ShowScreenMessage(hpMessage(), 2);
+				return null;
+			}
+
+			// Check permission and if the entity owner is the current player.
+			if (!permission.UserHasPermission(player.UserIDString, Constants.UsePermission) || entity.OwnerID != player.userID)
+			{
+				player.ShowScreenMessage(hpMessage(), 2);
+				return null;
+			}
+			
 			if (researchTable != null) // Upgrade to crafter (if less than 10 minutes since placement)
 			{
+				if (!upgradeableEntities.Contains(researchTable))
+					return null;
+
 				return HandleUpgradeRequest(player, researchTable);
 			}
 
@@ -147,6 +240,12 @@ namespace Oxide.Plugins
 
 			if (crafter == null)
 				return null;
+
+			if (DateTime.UtcNow - crafter.CreationTime > TimeSpan.FromSeconds(Constants.TimeToUpgrade))
+			{
+				player.ShowScreenMessage(hpMessage(), 2);
+				return null;
+			}
 
 			return HandleDowngradeRequest(player, crafter);
 		}
@@ -181,6 +280,8 @@ namespace Oxide.Plugins
 			FxManager.Initialize();
 			CrafterManager.Initialize();
 			CrafterManager.Load();
+
+			serverInitialized = true;
 		}
 
 		private void OnServerSave()

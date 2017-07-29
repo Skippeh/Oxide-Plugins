@@ -68,6 +68,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			foreach (var kv in jCrafters)
 			{
+				var jCrafter = kv.Value;
 				string strPosition = kv.Key;
 				Vector3 position = Utility.ParseXYZ(strPosition);
 
@@ -84,7 +85,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 					continue;
 				}
 
-				CreateCrafter(researchTable);
+				var crafter = CreateCrafter(researchTable);
+				crafter.CreationTime = jCrafter["CreationTime"].ToObject<DateTime>();
+
 				++loadedCount;
 			}
 

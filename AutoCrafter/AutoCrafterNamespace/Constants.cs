@@ -12,6 +12,7 @@
 		public const int RecyclerNumInputSlots = 6;
 		public const float CrafterNearRadius = 2.5f;
 		public const float HammerConfirmTime = 2f;
+		public const float TimeToUpgrade = 600f;
 
 		public const string UsePermission = "autocrafter.use";
 	}
