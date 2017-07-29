@@ -160,7 +160,28 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{
 				OnPlayerLeave(player);
 			}
-			
+
+			// Drop queue items
+			if (CraftingTasks.Count > 0)
+			{
+				var container = new ItemContainer();
+				container.ServerInitialize(null, 36);
+
+				foreach (var task in CraftingTasks)
+				{
+					foreach (var ingredient in task.Blueprint.ingredients)
+					{
+						var item = ItemManager.CreateByItemID(ingredient.itemid, (int) ingredient.amount * task.Amount);
+						
+						if (!item.MoveToContainer(container))
+							item.Drop(Position + Recycler.transform.up * 1.25f, Recycler.GetDropVelocity(), Recycler.ServerRotation);
+					}
+				}
+
+				var droppedContainer = container.Drop(Constants.ItemDropPrefab, Position + Recycler.transform.up * 1.25f, Recycler.ServerRotation);
+				droppedContainer.playerName = "Queue items";
+			}
+
 			Recycler.Kill();
 
 			if (!outputContainer.IsDestroyed)
@@ -194,7 +215,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 				if (currentTask.Elapsed >= currentTask.Blueprint.time)
 				{
-					var item = ItemManager.Create(currentTask.Blueprint.targetItem, currentTask.Blueprint.amountToCreate, currentTask.SkinID);
+					var item = ItemManager.CreateByItemID(currentTask.Blueprint.targetItem.itemid, currentTask.Blueprint.amountToCreate, currentTask.SkinID);
 
 					if (!GiveItem(item))
 					{
