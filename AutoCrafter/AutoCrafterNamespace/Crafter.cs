@@ -311,27 +311,11 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			Vis.Entities(checkPosition, checkRadius, nearPlayers);
 
 			var previousNearbyPlayers = NearbyPlayers.ToList(); // Nearby players last tick
-
-			// A function that determines whether the given player is crafting anything unrelated to this crafter. Returns true if the user is crafting.
-			Func<BasePlayer, bool> crafting = (player) =>
-			{
-				var itemCrafter = player.inventory.crafting;
-
-				if (itemCrafter.queue.Count <= 0)
-					return false;
-
-				// Since we know queue count is > 0 and the player does not have any task id's on this crafter, we know the craft tasks are all unrelated to this crafter.
-				if (!taskLookup.ContainsKey(player))
-					return true;
-
-				// The only way to reach this point is if the player had no craft tasks to begin with, and this crafter added the craft tasks along with an entry in the task lookup.
-				return false;
-			};
-
+			
 			// Keep all players that are the following:
 			// - Alive and not sleeping
 			// - Can see the recycler from their position, aka not behind a wall or anything
-			nearPlayers = nearPlayers.Where(plr => plr.IsAlive() && !plr.IsSleeping() && Recycler.IsVisible(plr.ServerPosition)).ToList();
+			nearPlayers = nearPlayers.Where(plr => plr.IsAlive() && !plr.IsSleeping() && PlayerCanAccess(plr) && Recycler.IsVisible(plr.ServerPosition)).ToList();
 
 			var playersLeaving = previousNearbyPlayers.Where(plr => !nearPlayers.Contains(plr)).ToList();
 			var playersEntering = nearPlayers.Where(plr => !previousNearbyPlayers.Contains(plr)).ToList();
@@ -539,6 +523,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// <param name="taskid">The craft taskid.</param>
 		public bool CancelByTaskId(BasePlayer player, int taskid)
 		{
+			if (!PlayerCanAccess(player))
+				return false;
+
 			var lookup = GetTaskLookupDict(player);
 			var task = lookup.FirstOrDefault(kv => kv.Value == taskid);
 
@@ -578,6 +565,32 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			
 			FxManager.PlayFx(CodeLock.ServerPosition, Constants.CodelockPlaceSoundPrefab);
 			return true;
+		}
+
+		/// <summary>
+		/// Returns true if the player has authed on codelock if there is one and it's locked.
+		/// </summary>
+		public bool PlayerCanAccess(BasePlayer player)
+		{
+			if (!IsLocked())
+				return true;
+			
+			return CodeLock.whitelistPlayers.Contains(player.userID) || CodeLock.guestPlayers.Contains(player.userID);
+		}
+
+		public void PlayLockedSound()
+		{
+			FxManager.PlayFx(CodeLock?.ServerPosition ?? Position, "assets/prefabs/locks/keypad/effects/lock.code.denied.prefab");
+		}
+
+		public void PlayAccessSound()
+		{
+			FxManager.PlayFx(CodeLock?.ServerPosition ?? Position, "assets/prefabs/locks/keypad/effects/lock.code.unlock.prefab");
+		}
+
+		public bool IsLocked()
+		{
+			return CodeLock != null && CodeLock.IsLocked();
 		}
 
 		#endregion

@@ -53,11 +53,21 @@ namespace Oxide.Plugins
 			// Open the output container instead of the recycler ui.
 			NextFrame(() =>
 			{
+				if (!crafter.PlayerCanAccess(player))
+				{
+					crafter.PlayLockedSound();
+					player.CloseInventory();
+					return;
+				}
+
 				player.inventory.loot.Clear();
 				player.inventory.loot.StartLootingEntity(crafter.Output);
 				player.inventory.loot.AddContainer(crafter.OutputInventory);
 				player.inventory.loot.SendImmediate();
 				player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", crafter.Output.lootPanelName);
+
+				if (crafter.IsLocked())
+					crafter.PlayAccessSound();
 			});
 		}
 
@@ -287,6 +297,13 @@ namespace Oxide.Plugins
 				return null;
 			}
 
+			// Check if player has authed on potential codelock.
+			if (!crafter.PlayerCanAccess(player))
+			{
+				crafter.PlayLockedSound();
+				return true;
+			}
+
 			return HandleDowngradeRequest(player, crafter);
 		}
 
@@ -341,6 +358,22 @@ namespace Oxide.Plugins
 			if (CrafterManager.ContainsRecycler(recycler))
 			{
 				// Prevent recycling
+				return true;
+			}
+
+			return null;
+		}
+
+		object OnRecyclerToggle(Recycler recycler, BasePlayer player)
+		{
+			var crafter = CrafterManager.GetCrafter(recycler);
+
+			if (crafter == null)
+				return null;
+
+			if (!crafter.PlayerCanAccess(player))
+			{
+				crafter.PlayLockedSound();
 				return true;
 			}
 

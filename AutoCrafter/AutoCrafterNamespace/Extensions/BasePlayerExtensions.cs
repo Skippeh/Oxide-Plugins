@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Oxide.Plugins.AutoCrafterNamespace.UI;
+using ProtoBuf;
 using UnityEngine;
 
 namespace Oxide.Plugins.AutoCrafterNamespace.Extensions
@@ -116,6 +117,11 @@ namespace Oxide.Plugins.AutoCrafterNamespace.Extensions
 				screenMessages.Add(player, UiManager.CreateUI<ScreenMessageUI>());
 
 			return screenMessages[player];
+		}
+
+		public static void CloseInventory(this BasePlayer player)
+		{
+			player.ClientRPC(null, "OnRespawnInformation", new RespawnInformation {spawnOptions = new List<RespawnInformation.SpawnOptions>()}.ToProtoBytes());
 		}
 	}
 }
