@@ -147,6 +147,41 @@ namespace Oxide.Plugins
 			}
 		}
 
+		void OnPlayerInput(BasePlayer player, InputState input)
+		{
+			if (input.WasJustPressed(BUTTON.FIRE_PRIMARY))
+			{
+				var activeItem = player.GetActiveItem();
+
+				if (activeItem?.info.itemid != -975723312) // Codelock
+					return;
+
+				var ray = player.eyes.HeadRay();
+				RaycastHit hit;
+
+				if (!Physics.Raycast(ray, out hit, 3, 1 << (int) Layer.Deployed))
+					return;
+
+				var recycler = hit.transform.GetComponentInParent<Recycler>();
+
+				if (recycler == null)
+					return;
+
+				if (player.IsBuildingBlocked(recycler.ServerPosition, recycler.ServerRotation, recycler.bounds))
+					return;
+
+				var crafter = CrafterManager.GetCrafter(recycler);
+
+				if (crafter == null)
+					return;
+
+				if (crafter.AddCodelock())
+				{
+					activeItem.UseItem();
+				}
+			}
+		}
+
 		private object OnServerCommand(ConsoleSystem.Arg arg)
 		{
 			if (arg.Connection == null)

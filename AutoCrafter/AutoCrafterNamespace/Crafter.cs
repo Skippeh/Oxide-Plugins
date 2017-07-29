@@ -56,6 +56,27 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		[JsonIgnore]
 		public DroppedItemContainer Output => outputContainer;
 
+		/// <summary>
+		/// Gets the codelock on this crafter. May be null.
+		/// </summary>
+		[JsonIgnore]
+		public CodeLock CodeLock { get; private set; }
+
+		#region Json exclusive properties for saving/loading
+		[JsonProperty("Code")]
+		private string _code => CodeLock?.code;
+
+		[JsonProperty("GuestCode")]
+		private string _guestCode => CodeLock?.guestCode;
+
+		[JsonProperty("AuthedPlayers")]
+		private List<ulong> _authedPlayers => CodeLock?.whitelistPlayers;
+
+		[JsonProperty("GuestPlayers")]
+		private List<ulong> _guestPlayers => CodeLock?.guestPlayers;
+
+		#endregion
+
 		public event PlayerEnterDelegate PlayerEnter;
 		public event PlayerLeaveDelegate PlayerLeave;
 
@@ -186,6 +207,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			}
 
 			Recycler.Kill();
+			CodeLock?.Kill();
 
 			if (!outputContainer.IsDestroyed)
 			{
@@ -539,6 +561,23 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			researchTable.Spawn();
 
 			Destroy(destroyOutputContainer, unloading);
+		}
+
+		/// <summary>
+		/// Adds a codelock to this crafter.
+		/// </summary>
+		public bool AddCodelock()
+		{
+			if (CodeLock != null)
+				return false;
+
+			var instance = (CodeLock) GameManager.server.CreateEntity(Constants.CodelockPrefab, Position + (Recycler.transform.forward * 0.605f) + (Recycler.transform.up * 0.75f) + (Recycler.transform.right * -0.25f), Recycler.ServerRotation * Quaternion.Euler(0, -90, 0));
+			instance.enableSaving = false;
+			instance.Spawn();
+			CodeLock = instance;
+			
+			FxManager.PlayFx(CodeLock.ServerPosition, Constants.CodelockPlaceSoundPrefab);
+			return true;
 		}
 
 		#endregion

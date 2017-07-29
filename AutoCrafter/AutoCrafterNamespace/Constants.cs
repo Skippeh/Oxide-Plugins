@@ -8,6 +8,8 @@
 		public const string StackSoundFxPrefab = "assets/bundled/prefabs/fx/notice/stack.world.fx.prefab";
 		public const string UpgradeTopTierFxPrefab = "assets/bundled/prefabs/fx/build/promote_toptier.prefab";
 		public const string UpgradeMetalFxPrefab = "assets/bundled/prefabs/fx/build/promote_metal.prefab";
+		public const string CodelockPrefab = "assets/prefabs/locks/keypad/lock.code.prefab";
+		public const string CodelockPlaceSoundPrefab = "assets/prefabs/locks/keypad/effects/lock-code-deploy.prefab";
 
 		public const int RecyclerNumInputSlots = 6;
 		public const float CrafterNearRadius = 0.6f;
