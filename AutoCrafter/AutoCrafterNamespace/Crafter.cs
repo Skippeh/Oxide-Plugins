@@ -18,10 +18,12 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		public class CraftTask
 		{
-			public readonly int TaskID;
-			public ItemBlueprint Blueprint;
+			[JsonIgnore] public ItemBlueprint Blueprint;
 			public int Amount;
 			public ulong SkinID;
+
+			[JsonProperty("ItemID")]
+			private int _itemid => Blueprint.targetItem.itemid;
 
 			/// <summary>
 			/// Number of seconds this has been crafting for.
@@ -81,6 +83,24 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		[JsonProperty("IsLocked")]
 		private bool _locked => CodeLock?.IsLocked() ?? false;
+
+		[JsonProperty("OutputItems")]
+		private object _outputItems => OutputInventory.itemList.Select(item =>
+		{
+			if (item.info.itemid == 98228420) // Hidden item
+				return null;
+
+			return new
+			{
+				item.position,
+				item.info.itemid,
+				item.amount,
+				item.skin
+			};
+		}).Where(obj => obj != null).ToList();
+
+		[JsonProperty("On")]
+		private bool _turnedOn => Recycler.IsOn();
 
 		#endregion
 
@@ -459,7 +479,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 						SendUpdateCraftingTask(player, currentTask);
 					}
 
-					return;
+					return currentTask;
 				}
 			}
 
@@ -472,10 +492,12 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			}
 
 			// Turn on recycler
-			if (!Recycler.IsOn())
+			if (startRecycler && !Recycler.IsOn())
 			{
 				Recycler.StartRecycling();
 			}
+
+			return craftTask;
 		}
 
 		public void AddCraftTask(ItemCraftTask task)

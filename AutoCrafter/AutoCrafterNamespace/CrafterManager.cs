@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Apex;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
 using Oxide.Plugins.AutoCrafterNamespace.UI;
@@ -77,7 +78,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 				// Compare entity positions and take the first research table or recycler that is within 0.001 units of the saved position.
 				float maxDistanceSqr = 0.001f * 0.001f;
-				var baseEntity = entities.FirstOrDefault(ent => (ent is ResearchTable || ent is Recycler) && (position - ent.ServerPosition).sqrMagnitude <= maxDistanceSqr) as BaseEntity;
+				var baseEntity = entities.FirstOrDefault(ent => (ent is ResearchTable || ent is Recycler) && (position - ent.ServerPosition).sqrMagnitude <= maxDistanceSqr);
 
 				if (baseEntity == null)
 				{
@@ -110,6 +111,32 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 					if (isLocked)
 						codeLock.SetFlag(BaseEntity.Flags.Locked, true);
 				}
+
+				// Restore crafting queue
+				foreach (var jTask in jCrafter["CraftingTasks"].Value<JArray>())
+				{
+					var blueprint = ItemManager.FindBlueprint(ItemManager.FindItemDefinition(jTask["ItemID"].ToObject<int>()));
+					int amount = jTask["Amount"].ToObject<int>();
+					ulong skin = jTask["SkinID"].ToObject<ulong>();
+					
+					var task = crafter.AddCraftTask(blueprint, amount, skin, false);
+					task.Elapsed = jTask["Elapsed"].ToObject<float>();
+				}
+
+				// Restore output container
+				foreach (var jItem in jCrafter["OutputItems"].Value<JArray>())
+				{
+					int itemId = jItem["itemid"].ToObject<int>();
+					int amount = jItem["amount"].ToObject<int>();
+					ulong skinId = jItem["skin"].ToObject<ulong>();
+					int index = jItem["position"].ToObject<int>();
+
+					var item = ItemManager.CreateByItemID(itemId, amount, skinId);
+					item.MoveToContainer(crafter.OutputInventory, index);
+				}
+
+				if (jCrafter["On"].ToObject<bool>())
+					crafter.Recycler.StartRecycling();
 
 				++loadedCount;
 			}
