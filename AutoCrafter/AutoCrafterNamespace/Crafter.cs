@@ -20,7 +20,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		{
 			[JsonIgnore] public ItemBlueprint Blueprint;
 			public int Amount;
-			public ulong SkinID;
+			public int SkinID;
 
 			[JsonProperty("ItemID")]
 			private int _itemid => Blueprint.targetItem.itemid;
@@ -30,7 +30,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			/// </summary>
 			public float Elapsed;
 
-			public CraftTask(ItemBlueprint blueprint, int amount, ulong skinId)
+			public CraftTask(ItemBlueprint blueprint, int amount, int skinId)
 			{
 				Blueprint = blueprint;
 				Amount = amount;
@@ -267,8 +267,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 				if (currentTask.Elapsed >= currentTask.Blueprint.time)
 				{
-					var item = ItemManager.CreateByItemID(currentTask.Blueprint.targetItem.itemid, currentTask.Blueprint.amountToCreate, currentTask.SkinID);
+					ulong workshopSkinId = Rust.Global.SteamServer.Inventory.FindDefinition(currentTask.SkinID)?.GetProperty<ulong>("workshopdownload") ?? 0;
 
+					if (workshopSkinId == 0)
+						workshopSkinId = (ulong)currentTask.SkinID;
+
+					var item = ItemManager.CreateByItemID(currentTask.Blueprint.targetItem.itemid, currentTask.Blueprint.amountToCreate, workshopSkinId);
+					
 					if (!GiveItem(item))
 					{
 						item.Drop(Recycler.GetDropPosition(), Recycler.GetDropVelocity());
@@ -499,7 +504,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		#region Public api methods
 
-		public void AddCraftTask(ItemBlueprint blueprint, int amount, ulong skinId = 0)
+		public CraftTask AddCraftTask(ItemBlueprint blueprint, int amount, int skinId = 0, bool startRecycler = true)
 		{
 			// Merge with current craft queue if the current crafting item is the same blueprint and skin id.
 			if (CraftingTasks.Count > 0)
@@ -539,7 +544,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		public void AddCraftTask(ItemCraftTask task)
 		{
-			AddCraftTask(task.blueprint, task.amount, (ulong) task.skinID);
+			AddCraftTask(task.blueprint, task.amount, task.skinID);
 		}
 
 		/// <summary>

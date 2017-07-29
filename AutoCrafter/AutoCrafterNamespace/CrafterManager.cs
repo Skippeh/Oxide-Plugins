@@ -117,7 +117,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				{
 					var blueprint = ItemManager.FindBlueprint(ItemManager.FindItemDefinition(jTask["ItemID"].ToObject<int>()));
 					int amount = jTask["Amount"].ToObject<int>();
-					ulong skin = jTask["SkinID"].ToObject<ulong>();
+					int skin = jTask["SkinID"].ToObject<int>();
 					
 					var task = crafter.AddCraftTask(blueprint, amount, skin, false);
 					task.Elapsed = jTask["Elapsed"].ToObject<float>();
