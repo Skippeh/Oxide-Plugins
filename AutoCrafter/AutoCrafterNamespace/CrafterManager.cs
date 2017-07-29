@@ -88,6 +88,29 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				var crafter = baseEntity is Recycler ? CreateCrafter((Recycler) baseEntity) : CreateCrafter((ResearchTable) baseEntity);
 				crafter.CreationTime = jCrafter["CreationTime"].ToObject<DateTime>();
 
+				// Load codelock
+				bool hasCodeLock = jCrafter["HasCodeLock"].ToObject<bool>();
+
+				if (hasCodeLock)
+				{
+					crafter.AddCodelock();
+					var codeLock = crafter.CodeLock;
+
+					string code = jCrafter["Code"].ToObject<string>();
+					string guestCode = jCrafter["GuestCode"].ToObject<string>();
+					ulong[] authedPlayers = jCrafter["AuthedPlayers"].ToObject<ulong[]>();
+					ulong[] guestPlayers = jCrafter["GuestPlayers"].ToObject<ulong[]>();
+					bool isLocked = jCrafter["IsLocked"].ToObject<bool>();
+
+					codeLock.code = code;
+					codeLock.guestCode = guestCode;
+					codeLock.whitelistPlayers.AddRange(authedPlayers);
+					codeLock.guestPlayers.AddRange(guestPlayers);
+
+					if (isLocked)
+						codeLock.SetFlag(BaseEntity.Flags.Locked, true);
+				}
+
 				++loadedCount;
 			}
 

@@ -76,6 +76,12 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		[JsonProperty("GuestPlayers")]
 		private List<ulong> _guestPlayers => CodeLock?.guestPlayers;
 
+		[JsonProperty("HasCodeLock")]
+		private bool _hasCodelock => CodeLock != null;
+
+		[JsonProperty("IsLocked")]
+		private bool _locked => CodeLock?.IsLocked() ?? false;
+
 		#endregion
 
 		public event PlayerEnterDelegate PlayerEnter;
