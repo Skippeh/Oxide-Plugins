@@ -553,8 +553,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				SendAddCraftingTask(player, craftTask);
 			}
 
-			// Turn on recycler
-			if (startRecycler && !Recycler.IsOn())
+			// Turn on recycler if the queue was empty before.
+			if (startRecycler && !Recycler.IsOn() && wasEmpty)
 			{
 				Recycler.StartRecycling();
 			}
