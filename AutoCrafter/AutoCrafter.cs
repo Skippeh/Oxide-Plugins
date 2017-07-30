@@ -283,6 +283,8 @@ namespace Oxide.Plugins
 			if (!lastHammerHit.ContainsKey(player))
 				lastHammerHit[player] = 0;
 
+			((DecayEntity) entity).DecayTouch(); // Reset decay
+
 			// Make sure entity is full health, otherwise repair.
 			if (entity.Health() < entity.MaxHealth())
 			{
