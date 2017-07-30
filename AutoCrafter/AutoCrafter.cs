@@ -262,6 +262,9 @@ namespace Oxide.Plugins
 				return null;
 			}
 
+			if (!lastHammerHit.ContainsKey(player))
+				lastHammerHit[player] = 0;
+
 			// Make sure entity is full health, otherwise repair.
 			if (entity.Health() < entity.MaxHealth())
 			{
@@ -271,8 +274,24 @@ namespace Oxide.Plugins
 				if (!CrafterManager.ContainsRecycler(recycler))
 					return null;
 
+				if (Time.time - lastHammerHit[player] > Constants.HammerConfirmTime)
+				{
+					player.ShowScreenMessage(hpMessage() + "\n\nHit again to repair", Constants.HammerConfirmTime);
+					lastHammerHit[player] = Time.time;
+					return true;
+				}
+
+				lastHammerHit[player] = Time.time;
+				player.HideScreenMessage();
 				entity.DoRepair(player);
 				player.ShowScreenMessage(hpMessage(), 2);
+
+				// Reset last hammer hit so that the player won't accidentally downgrade/upgrade with the next hammer hit.
+				if (entity.Health() >= entity.MaxHealth())
+				{
+					lastHammerHit[player] = 0;
+				}
+
 				return true;
 			}
 
@@ -420,7 +439,7 @@ namespace Oxide.Plugins
 
 		#endregion
 		
-		// For keeping track of how long ago they requested with the previous hammer hit. Used for confirming by hitting twice with hammer to upgrade or downgrade.
+		// For keeping track of how long ago they requested with the previous hammer hit. Used for confirming by hitting twice with hammer to upgrade, downgrade, or repair.
 		private readonly Dictionary<BasePlayer, float> lastHammerHit = new Dictionary<BasePlayer, float>();
 
 		// Return value:
@@ -446,8 +465,7 @@ namespace Oxide.Plugins
 				}
 			}
 
-			float lastHit;
-			lastHammerHit.TryGetValue(player, out lastHit);
+			float lastHit = lastHammerHit[player];
 			
 			if (Time.time - lastHit > Constants.HammerConfirmTime) // Confirm the upgrade
 			{
@@ -475,8 +493,7 @@ namespace Oxide.Plugins
 		// - anything else: prevent default behaviour.
 		private object HandleDowngradeRequest(BasePlayer player, Crafter crafter)
 		{
-			float lastRequest;
-			lastHammerHit.TryGetValue(player, out lastRequest);
+			float lastRequest = lastHammerHit[player];
 
 			if (Time.time - lastRequest > Constants.HammerConfirmTime) // Confirm the downgrade
 			{
