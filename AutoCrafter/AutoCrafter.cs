@@ -308,10 +308,34 @@ namespace Oxide.Plugins
 			return HandleDowngradeRequest(player, crafter);
 		}
 
-		private void Init()
+		protected override void LoadDefaultConfig()
+		{
+			Utility.Config = new PluginConfig();
+			Utility.Config.UpgradeCost.AddRange(new List<PluginConfig.ItemAmount>
+			{
+				new PluginConfig.ItemAmount("metal.refined", 25),
+				new PluginConfig.ItemAmount("metal.fragments", 500),
+				new PluginConfig.ItemAmount("techparts", 3),
+				new PluginConfig.ItemAmount("gears", 3)
+			});
+		}
+
+		private void Loaded()
+		{
+			if (Utility.Config == null)
+			{
+				Utility.Config = Config.ReadObject<PluginConfig>();
+				Config.WriteObject(Utility.Config); // Save any new or removed properties.
+			}
+			else
+			{
+				Config.WriteObject(Utility.Config);
+			}
+		}
+		
+		private void OnServerInitialized()
 		{
 			Utility.Timer = timer;
-			Utility.Config = new PluginConfig(); // Todo: load from disk
 
 			foreach (var itemAmount in Utility.Config.UpgradeCost)
 			{
@@ -329,10 +353,7 @@ namespace Oxide.Plugins
 			Config.Settings.AddConverters();
 			permission.RegisterPermission(Constants.UsePermission, this);
 			lang.RegisterMessages(Lang.DefaultMessages, this, "en");
-		}
-		
-		private void OnServerInitialized()
-		{
+			
 			UiManager.Initialize();
 			Lang.Initialize(this, lang);
 			FxManager.Initialize();
@@ -379,11 +400,6 @@ namespace Oxide.Plugins
 			}
 
 			return null;
-		}
-
-		protected override void LoadDefaultConfig()
-		{
-
 		}
 
 		#endregion

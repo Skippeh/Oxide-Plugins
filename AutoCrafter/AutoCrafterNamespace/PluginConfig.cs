@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Oxide.Plugins.AutoCrafterNamespace
 {
@@ -18,14 +19,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		public bool ScanForWorldItems { get; set; } = true;
 
-		public List<ItemAmount> UpgradeCost { get; set; } = new List<ItemAmount>
-		{
-			new ItemAmount("metal.refined", 25),
-			new ItemAmount("metal.fragments", 500),
-			new ItemAmount("techparts", 3),
-			new ItemAmount("gears", 3)
-		};
-
+		public List<ItemAmount> UpgradeCost { get; set; } = new List<ItemAmount>();
+		
 		public float[] CrafterProtectionProperties { get; set; } =
 		{
 			0.98f, // Generic
