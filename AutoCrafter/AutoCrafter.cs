@@ -485,30 +485,28 @@ namespace Oxide.Plugins
 
 			Action appendMenus = () =>
 			{
-				message.AppendLine("- craft : How to craft and what the requirements are.");
-				message.Append("- more : More info that is useful to know but might not be obvious.");
+				message.AppendLine("- craft : " + Lang.Translate(player, "chat-description-craft"));
+				message.Append("- more : " + Lang.Translate(player, "chat-description-more"));
 			};
 
 			switch (submenu)
 			{
 				default:
 				{
-					message.Append("Unknown sub menu selection. Please select one of the following:\n");
+					message.Append(Lang.Translate(player, "chat-unknown-selection") + "\n");
 					appendMenus();
 					break;
 				}
 				case null:
 				{
-					message.AppendLine("AutoCrafter allows for automatic crafting, even after you log off or go out to grind or kill nakeds.");
-					message.AppendLine("To learn more, type /autocrafter and then one of the following words:");
+					message.AppendLine(Lang.Translate(player, "chat-default-text"));
 					appendMenus();
 					break;
 				}
 				case "craft":
 				{
-					title = "Crafting";
-					message.AppendLine("To craft, you must first place a research table, then hit it two times with a hammer.");
-					message.AppendLine("The requirements are:");
+					title = Lang.Translate(player, "chat-title-craft");
+					message.AppendLine(Lang.Translate(player, "chat-craft-text-top"));
 
 					foreach (var itemAmount in UpgradeCost)
 					{
@@ -516,35 +514,30 @@ namespace Oxide.Plugins
 					}
 
 					message.AppendLine();
-					message.AppendLine("It is possible to downgrade by hitting it twice again with a hammer. You will receive a full refund.");
-					message.AppendLine("Note that upgrading and downgrading is limited by a 10 minute window from when you first placed the research table or upgraded.");
-
+					message.AppendLine(Lang.Translate(player, "chat-craft-text-bottom"));
+					
 					break;
 				}
 				case "usage":
 				{
-					title = "Usage";
-					message.AppendLine("To start crafting something, stand infront of the crafter and start crafting normally.\n" +
-					                   "You will know it's working if the machine starts and there's a message at the bottom of the screen.");
+					title = Lang.Translate(player, "chat-title-usage");
+					message.AppendLine(Lang.Translate(player, "chat-usage-text"));
 
 					if (Utility.Config.ScanForWorldItems)
 					{
-						message.AppendLine("It is possible to put items in by dropping them at the top of the machine.");
+						message.AppendLine(Lang.Translate(player, "chat-usage-text-droptop"));
 					}
 					break;
 				}
 				case "more":
 				{
-					title = "More";
-					message.AppendLine("- You can put code locks on the crafters.");
-					message.AppendLine("- Destroying it takes 2 c4, or 6 rockets. Melee is not viable. This may vary from server to server though depending on their configuration.");
-					message.AppendLine("- If destroyed the loot will spill out on the ground.");
-					message.AppendLine("- You can check the HP by hitting it once with a hammer. Continue hitting it if you want to repair.");
+					title = Lang.Translate(player, "chat-title-more");
+					message.AppendLine(Lang.Translate(player, "chat-more-text"));
 					break;
 				}
 			}
 
-			message.Insert(0, "<size=20>AutoCrafter" + (title != null ? (" - " + title) : "") + "</size>\n");
+			message.Insert(0, "<size=20>" + Lang.Translate(player, "chat-title") + (title != null ? (" - " + title) : "") + "</size>\n");
 
 			player.ChatMessage(message.ToString());
 		}
