@@ -212,25 +212,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		/// <param name="downgrade">If true, then the recycler will be replaced with a research table.</param>
 		public static void DestroyCrafter(Crafter crafter, bool downgrade, bool destroyOutputContainer, bool unloading = false)
 		{
-			if (!Crafters.Remove(crafter.Position))
-			{
-				Debug.LogWarning("Vector3 comparison most likely inaccurate, testing search...");
-
-				var kv = Crafters.First(kv2 => kv2.Value == crafter);
-
-				if (!Crafters.Remove(kv.Key))
-				{
-					throw new NotImplementedException("Need to change dict key from vector3 to something more reliable.");
-				}
-
-				Debug.Log("Found.");
-
-				crafter.PlayerEnter -= OnPlayerEnterCrafter;
-				crafter.PlayerLeave -= OnPlayerLeaveCrafter;
-			}
-
+			Crafters.Remove(crafter.Position);
 			crafterLookup.Remove(crafter.Recycler);
-
+			
 			if (downgrade)
 			{
 				crafter.Downgrade(destroyOutputContainer);
@@ -239,6 +223,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{
 				crafter.Destroy(destroyOutputContainer, unloading);
 			}
+
+			crafter.PlayerEnter -= OnPlayerEnterCrafter;
+			crafter.PlayerLeave -= OnPlayerLeaveCrafter;
 		}
 
 		/// <summary>
