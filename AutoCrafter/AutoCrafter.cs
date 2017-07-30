@@ -193,6 +193,22 @@ namespace Oxide.Plugins
 			}
 		}
 
+		// Make sure nothing is clipping into recycler. Pretty hacky method, but the recycler doesn't block things like other deployables.
+		object CanBuild(Planner plan, Construction prefab, Vector3 position)
+		{
+			BasePlayer player = plan.GetOwnerPlayer();
+			
+			List<Recycler> recyclers = new List<Recycler>();
+			Vis.Entities(position, prefab.bounds.size.magnitude / 3f, recyclers, 1 << (int) Layer.Deployed);
+			
+			if (recyclers.Count <= 0)
+			{
+				return null;
+			}
+			
+			return true;
+		}
+
 		private object OnServerCommand(ConsoleSystem.Arg arg)
 		{
 			if (arg.Connection == null)
