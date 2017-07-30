@@ -197,25 +197,6 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			item.MoveToContainer(outputInventory, outputInventory.capacity - 1);
 		}
 
-		private DroppedItemContainer CreateItemContainer(Vector3 position, Quaternion rotation, string name, out ItemContainer inventory)
-		{
-			var container = (DroppedItemContainer) GameManager.server.CreateEntity(Constants.ItemDropPrefab, position, rotation);
-			container.playerName = name;
-			container.enableSaving = false;
-			container.Spawn();
-
-			container.TakeFrom(new ItemContainer());
-
-			inventory = (ItemContainer) typeof (DroppedItemContainer).GetField("inventory", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(container);
-
-			if (inventory == null)
-			{
-				throw new NotImplementedException("Could not find private 'inventory' field in type DroppedItemContainer.");
-			}
-
-			return container;
-		}
-
 		public void Tick(float elapsed)
 		{
 			if (outputContainer.IsDestroyed)
@@ -269,13 +250,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			if (!outputContainer.IsDestroyed)
 			{
 				// Remove rock from output container that keeps it from despawning when emptied
-				OutputInventory.GetSlot(OutputInventory.capacity - 1).Remove();
+				outputInventory.GetSlot(outputInventory.capacity - 1).Remove();
 
 				// Force kill output bag if there's nothing in it.
 				if (!destroyOutputContainer && OutputInventory.AnyItems())
 				{
 					// Enable physics on output container
-					Output.GetComponent<Rigidbody>().isKinematic = false;
+					outputContainer.GetComponent<Rigidbody>().isKinematic = false;
 				}
 				else
 				{
@@ -733,6 +714,25 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		}
 
 		#endregion
+
+		private DroppedItemContainer CreateItemContainer(Vector3 position, Quaternion rotation, string name, out ItemContainer inventory)
+		{
+			var container = (DroppedItemContainer)GameManager.server.CreateEntity(Constants.ItemDropPrefab, position, rotation);
+			container.playerName = name;
+			container.enableSaving = false;
+			container.Spawn();
+
+			container.TakeFrom(new ItemContainer());
+
+			inventory = (ItemContainer)typeof(DroppedItemContainer).GetField("inventory", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(container);
+
+			if (inventory == null)
+			{
+				throw new NotImplementedException("Could not find private 'inventory' field in type DroppedItemContainer.");
+			}
+
+			return container;
+		}
 
 		private void DumpContainer(Vector3 position, Quaternion rotation, List<Item> items)
 		{
