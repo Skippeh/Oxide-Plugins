@@ -19,6 +19,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		public bool ScanForWorldItems { get; set; } = true;
 
+		public bool ShowPlayerInstructionsOnFirstJoin { get; set; } = true;
+		public bool ShowInstructionsAsGameTip { get; set; } = true;
+
 		public List<ItemAmount> UpgradeCost { get; set; } = new List<ItemAmount>();
 		
 		public float[] CrafterProtectionProperties { get; set; } =

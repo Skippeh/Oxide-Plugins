@@ -23,7 +23,8 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{"ingredients-missing-youneed", "You do not have the required ingredients.\nYou need:"},
 			{"hammer-confirm-upgrade", "Hit again to upgrade to a crafter..."},
 			{"hammer-confirm-downgrade", "Hit again to downgrade to a research table...\n\nItems will not be lost."},
-			{"crafter-inrange", "Crafter active"}
+			{"crafter-inrange", "Crafter active"},
+			{"join-message", "This server has the AutoCrafter mod. Type /autocrafter to read more."}
 		};
 
 		public static void Initialize(Plugin plugin, Core.Libraries.Lang lang)

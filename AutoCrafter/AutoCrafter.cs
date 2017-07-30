@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using Oxide.Plugins.AutoCrafterNamespace;
@@ -19,6 +20,11 @@ namespace Oxide.Plugins
 		/// Used for keeping track of when research tables were placed so we know if enough time has passed that upgrading is impossible.
 		/// </summary>
 		private readonly List<BaseEntity> upgradeableEntities = new List<BaseEntity>();
+
+		/// <summary>
+		/// List of players that have received the first join message.
+		/// </summary>
+		private List<ulong> introducedPlayers = new List<ulong>(); 
 
 		private bool serverInitialized = false;
 
@@ -191,6 +197,15 @@ namespace Oxide.Plugins
 					FxManager.PlayFx(crafter.CodeLock.ServerPosition, Constants.CodelockPlaceSoundPrefab);
 				}
 			}
+		}
+
+		// Show message if enabled
+		void OnPlayerSpawn(BasePlayer player)
+		{
+			if (!Utility.Config.ShowPlayerInstructionsOnFirstJoin)
+				return;
+
+			ShowJoinMessage(player);
 		}
 
 		// Make sure nothing is clipping into recycler. Pretty hacky method, but the recycler doesn't block things like other deployables.
@@ -396,12 +411,28 @@ namespace Oxide.Plugins
 			CrafterManager.Initialize();
 			CrafterManager.Load();
 
+			if (Utility.Config.ShowPlayerInstructionsOnFirstJoin)
+			{
+				// Load previously introduced players
+				introducedPlayers = Core.Interface.Oxide.DataFileSystem.ReadObject<List<ulong>>("AutoCrafter/IntroducedPlayers");
+
+				foreach (var player in BasePlayer.activePlayerList)
+				{
+					ShowJoinMessage(player);
+				}
+			}
+
 			serverInitialized = true;
 		}
 
 		private void OnServerSave()
 		{
 			CrafterManager.Save();
+
+			if (Utility.Config.ShowPlayerInstructionsOnFirstJoin)
+			{
+				Core.Interface.Oxide.DataFileSystem.WriteObject("AutoCrafter/IntroducedPlayers", introducedPlayers);
+			}
 		}
 
 		private void Unload()
@@ -439,7 +470,84 @@ namespace Oxide.Plugins
 		}
 
 		#endregion
-		
+
+		#region Chat commands
+
+		[ChatCommand("autocrafter")]
+		private void ChatCmd_Autocrafter(BasePlayer player, string command, string[] args)
+		{
+			string submenu = args.FirstOrDefault();
+			StringBuilder message = new StringBuilder();
+			string title = null;
+
+			Action appendMenus = () =>
+			{
+				message.AppendLine("- craft : How to craft and what the requirements are.");
+				message.Append("- more : More info that is useful to know but might not be obvious.");
+			};
+
+			switch (submenu)
+			{
+				default:
+				{
+					message.Append("Unknown sub menu selection. Please select one of the following:\n");
+					appendMenus();
+					break;
+				}
+				case null:
+				{
+					message.AppendLine("AutoCrafter allows for automatic crafting, even after you log off or go out to grind or kill nakeds.");
+					message.AppendLine("To learn more, type /autocrafter and then one of the following words:");
+					appendMenus();
+					break;
+				}
+				case "craft":
+				{
+					title = "Crafting";
+					message.AppendLine("To craft, you must first place a research table, then hit it two times with a hammer.");
+					message.AppendLine("The requirements are:");
+
+					foreach (var itemAmount in UpgradeCost)
+					{
+						message.AppendLine("- " + itemAmount.amount + "x " + itemAmount.itemDef.displayName.english);
+					}
+
+					message.AppendLine();
+					message.AppendLine("It is possible to downgrade by hitting it twice again with a hammer. You will receive a full refund.");
+					message.AppendLine("Note that upgrading and downgrading is limited by a 10 minute window from when you first placed the research table or upgraded.");
+
+					break;
+				}
+				case "usage":
+				{
+					title = "Usage";
+					message.AppendLine("To start crafting something, stand infront of the crafter and start crafting normally.\n" +
+					                   "You will know it's working if the machine starts and there's a message at the bottom of the screen.");
+
+					if (Utility.Config.ScanForWorldItems)
+					{
+						message.AppendLine("It is possible to put items in by dropping them at the top of the machine.");
+					}
+					break;
+				}
+				case "more":
+				{
+					title = "More";
+					message.AppendLine("- You can put code locks on the crafters.");
+					message.AppendLine("- Destroying it takes 2 c4, or 6 rockets. Melee is not viable. This may vary from server to server though depending on their configuration.");
+					message.AppendLine("- If destroyed the loot will spill out on the ground.");
+					message.AppendLine("- You can check the HP by hitting it once with a hammer. Continue hitting it if you want to repair.");
+					break;
+				}
+			}
+
+			message.Insert(0, "<size=20>AutoCrafter" + (title != null ? (" - " + title) : "") + "</size>\n");
+
+			player.ChatMessage(message.ToString());
+		}
+
+		#endregion
+
 		// For keeping track of how long ago they requested with the previous hammer hit. Used for confirming by hitting twice with hammer to upgrade, downgrade, or repair.
 		private readonly Dictionary<BasePlayer, float> lastHammerHit = new Dictionary<BasePlayer, float>();
 
@@ -498,8 +606,11 @@ namespace Oxide.Plugins
 
 			if (Time.time - lastRequest > Constants.HammerConfirmTime) // Confirm the downgrade
 			{
+				string message = Lang.Translate(player, "hp-message", crafter.Recycler.Health(), crafter.Recycler.MaxHealth());
+				message += "\n\n" + Lang.Translate(player, "hammer-confirm-downgrade");
+
 				lastHammerHit[player] = Time.time;
-				player.ShowScreenMessage(Lang.Translate(player, "hammer-confirm-downgrade"), Constants.HammerConfirmTime);
+				player.ShowScreenMessage(message, Constants.HammerConfirmTime);
 				return true;
 			}
 			
@@ -522,6 +633,21 @@ namespace Oxide.Plugins
 			}
 
 			return true;
+		}
+
+		private void ShowJoinMessage(BasePlayer player)
+		{
+			if (introducedPlayers.Contains(player.userID))
+				return;
+
+			string message = Lang.Translate(player, "join-message");
+
+			if (Utility.Config.ShowInstructionsAsGameTip)
+				player.ShowGameTip(message, 10f);
+			else
+				player.ChatMessage(message);
+
+			introducedPlayers.Add(player.userID);
 		}
 	}
 }
