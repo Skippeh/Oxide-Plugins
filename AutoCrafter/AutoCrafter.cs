@@ -175,7 +175,7 @@ namespace Oxide.Plugins
 				var ray = player.eyes.HeadRay();
 				RaycastHit hit;
 
-				if (!Physics.Raycast(ray, out hit, 3, 1 << (int) Layer.Deployed))
+				if (!Physics.Raycast(ray, out hit, 2.2f, 1 << (int) Layer.Deployed))
 					return;
 
 				var recycler = hit.transform.GetComponentInParent<Recycler>();
