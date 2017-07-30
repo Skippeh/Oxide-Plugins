@@ -29,7 +29,7 @@ namespace Oxide.Plugins
 			var player = task.owner;
 			var crafter = CrafterManager.FindByPlayer(player);
 
-			if (crafter != null)
+			if (crafter != null && crafter.PlayerCanAccess(player))
 			{
 				crafter.AddCraftTask(task);
 				return true;
