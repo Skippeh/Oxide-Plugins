@@ -330,13 +330,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 							break;
 
 						var worldItem = (WorldItem) entity;
-
-						/*if (worldItem.item.MoveToContainer(outputInventory))
-						{
-							nextPickup = Time.time + pickupDelay;
-							FxManager.PlayFx(worldItem.ServerPosition, Constants.StackSoundFxPrefab);
-						}*/
-
+						
 						bool partiallyInserted = false;
 
 						for (int i = 0; i < outputInventory.capacity - 1; ++i)
@@ -472,7 +466,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			crafting.taskUID++;
 
 			// The reason for always sending 2 as amount is because if a craft task is started with 1 item, the amount counter won't show in clientside, even if amount is incremented later.
-			// The real amount will be sent straight after, but then it will show with the counte, even if there's only 1.
+			// The real amount will be sent straight after, but then it will show with the counter, even if there's only 1.
 			player.Command("note.craft_add", crafting.taskUID, task.Blueprint.targetItem.itemid, 2, task.SkinID);
 
 			// Correct the craft amount.
