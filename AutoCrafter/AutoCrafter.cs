@@ -202,6 +202,9 @@ namespace Oxide.Plugins
 		// Show message if enabled
 		void OnPlayerSpawn(BasePlayer player)
 		{
+			if (!serverInitialized) // Check if server is initialized. This hook tends to call on startup before OnServerInitialized has been called.
+				return;
+
 			if (!Utility.Config.ShowPlayerInstructionsOnFirstJoin)
 				return;
 
