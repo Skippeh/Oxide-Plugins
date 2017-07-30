@@ -184,30 +184,36 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		private void CreateOutputContainer()
 		{
-			Vector3 outputPosition = Position + (Recycler.transform.forward * 0f) + (Recycler.transform.up * 0.72f) + (Recycler.transform.right * -0.25f);
-			Quaternion outputRotation = Recycler.ServerRotation * Quaternion.Euler(90, 0, 0);
+			Vector3 position = Position + (Recycler.transform.forward * 0f) + (Recycler.transform.up * 0.72f) + (Recycler.transform.right * -0.25f);
+			Quaternion rotation = Recycler.ServerRotation * Quaternion.Euler(90, 0, 0);
+			outputContainer = CreateItemContainer(position, rotation, Lang.Translate(null, "crafted-items"), out outputInventory);
 
-			outputContainer = (DroppedItemContainer) GameManager.server.CreateEntity(Constants.ItemDropPrefab, outputPosition, outputRotation);
-			outputContainer.playerName = Lang.Translate(null, "crafted-items");
-			outputContainer.enableSaving = false;
-			outputContainer.ShowHealthInfo = true;
-			outputContainer.Spawn();
-
-			outputContainer.TakeFrom(new ItemContainer());
-			outputInventory = (ItemContainer) typeof (DroppedItemContainer).GetField("inventory", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(outputContainer);
-
-			if (outputInventory == null)
-			{
-				throw new NotImplementedException("Could not find private 'inventory' field in type DroppedItemContainer.");
-			}
+			var rigidBody = outputContainer.GetComponent<Rigidbody>();
+			rigidBody.isKinematic = true; // Prevent physics from moving the container.
 
 			// Add a hidden inventory slot in output container to prevent it from despawning when closing empty loot.
 			outputInventory.capacity = 37;
 			var item = ItemManager.Create(ItemManager.FindItemDefinition("gears"), 1);
 			item.MoveToContainer(outputInventory, outputInventory.capacity - 1);
+		}
 
-			var rigidBody = outputContainer.GetComponent<Rigidbody>();
-			rigidBody.isKinematic = true; // Prevent physics from moving the container.
+		private DroppedItemContainer CreateItemContainer(Vector3 position, Quaternion rotation, string name, out ItemContainer inventory)
+		{
+			var container = (DroppedItemContainer) GameManager.server.CreateEntity(Constants.ItemDropPrefab, position, rotation);
+			container.playerName = name;
+			container.enableSaving = false;
+			container.Spawn();
+
+			container.TakeFrom(new ItemContainer());
+
+			inventory = (ItemContainer) typeof (DroppedItemContainer).GetField("inventory", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(container);
+
+			if (inventory == null)
+			{
+				throw new NotImplementedException("Could not find private 'inventory' field in type DroppedItemContainer.");
+			}
+
+			return container;
 		}
 
 		public void Tick(float elapsed)
@@ -548,23 +554,25 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			bool wasEmpty = CraftingTasks.Count == 0;
 
 			// Merge with current craft queue if the item is in queue with matching skin.
-			var currentTask = CraftingTasks.FirstOrDefault(task => task.Blueprint.targetItem.itemid == blueprint.targetItem.itemid && task.SkinID == skinId);
+			var craftTask = CraftingTasks.FirstOrDefault(task => task.Blueprint.targetItem.itemid == blueprint.targetItem.itemid && task.SkinID == skinId);
 
-			if (currentTask != null)
+			if (craftTask != null)
 			{
-				currentTask.Amount += amount;
+				craftTask.Amount += amount;
 
 				// Send new amount to all players
 				foreach (var player in NearbyPlayers)
 				{
-					SendCraftingTaskProgress(player, currentTask);
+					SendCraftingTaskProgress(player, craftTask);
 				}
 
-				return currentTask;
+				return craftTask;
 			}
-
-			var craftTask = new CraftTask(blueprint, amount, skinId);
-			CraftingTasks.Add(craftTask);
+			else
+			{
+				craftTask = new CraftTask(blueprint, amount, skinId);
+				CraftingTasks.Add(craftTask);
+			}
 
 			foreach (var player in NearbyPlayers)
 			{
@@ -608,14 +616,37 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			var refundItems = task.Blueprint.ingredients;
 
+			// List of items that couldn't fit in player inventory
+			List<Item> overflow = new List<Item>();
+
 			foreach (var itemAmount in refundItems)
 			{
-				float amount = itemAmount.amount * task.Amount; // Use float to be forward compatible (itemAmount.amount is float).
+				int amount = (int) itemAmount.amount * task.Amount;
 
-				var item = ItemManager.CreateByItemID(itemAmount.itemid, (int) amount);
-				refundTo.GiveItem(item);
+				while (amount > 0)
+				{
+					var item = ItemManager.CreateByItemID(itemAmount.itemid, Math.Min((int) amount, itemAmount.itemDef.stackable));
+					amount -= item.amount;
+
+					if (!item.MoveToContainer(refundTo.inventory.containerMain) && !item.MoveToContainer(refundTo.inventory.containerBelt))
+					{
+						overflow.Add(item);
+					}
+				}
 			}
 
+			if (overflow.Count > 0)
+			{
+				Utility.Log("Overflow:");
+
+				foreach (var item in overflow)
+				{
+					Utility.Log("- " + item.amount + "x " + item.info.displayName.english);
+				}
+
+				DumpContainer(refundTo.ServerPosition, Quaternion.identity, overflow);
+			}
+			
 			// Stop recycler if crafting queue is empty.
 			if (CraftingTasks.Count <= 0)
 			{
@@ -702,5 +733,23 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		}
 
 		#endregion
+
+		private void DumpContainer(Vector3 position, Quaternion rotation, List<Item> items)
+		{
+			ItemContainer inventory;
+			DroppedItemContainer container = CreateItemContainer(position, rotation, "test", out inventory);
+			inventory.capacity = 36;
+
+			foreach (var item in items.ToList())
+			{
+				items.Remove(item);
+
+				if (!item.MoveToContainer(inventory))
+				{
+					DumpContainer(position, rotation, items);
+					break;
+				}
+			}
+		}
 	}
 }
