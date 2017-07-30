@@ -168,7 +168,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			if (researchPrefab == null)
 			{
-				Debug.LogWarning("Could not find research table prefab, skipping decay setup");
+				Utility.LogWarning("Could not find research table prefab, skipping decay setup");
 			}
 			else
 			{
@@ -188,7 +188,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			Quaternion outputRotation = Recycler.ServerRotation * Quaternion.Euler(90, 0, 0);
 
 			outputContainer = (DroppedItemContainer) GameManager.server.CreateEntity(Constants.ItemDropPrefab, outputPosition, outputRotation);
-			outputContainer.playerName = "Crafted items";
+			outputContainer.playerName = Lang.Translate(null, "crafted-items");
 			outputContainer.enableSaving = false;
 			outputContainer.ShowHealthInfo = true;
 			outputContainer.Spawn();
@@ -253,7 +253,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 					}
 
 					var droppedContainer = container.Drop(Constants.ItemDropPrefab, Position + Recycler.transform.up * 1.25f, Recycler.ServerRotation);
-					droppedContainer.playerName = "Queue items";
+					droppedContainer.playerName = Lang.Translate(null, "queue-items");
 				}
 			}
 

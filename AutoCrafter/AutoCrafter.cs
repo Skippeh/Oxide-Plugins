@@ -248,7 +248,7 @@ namespace Oxide.Plugins
 
 			Func<string> hpMessage = () =>
 			{
-				return "HP: " + entity.Health().ToString("0") + "/" + entity.MaxHealth();
+				return Lang.Translate(player, "hp-message", entity.Health(), entity.MaxHealth());
 			};
 
 			// Don't allow upgrading/downgrading/repairing if there's less than 8 seconds since the entity was attacked.
@@ -276,7 +276,7 @@ namespace Oxide.Plugins
 
 				if (Time.time - lastHammerHit[player] > Constants.HammerConfirmTime)
 				{
-					player.ShowScreenMessage(hpMessage() + "\n\nHit again to repair", Constants.HammerConfirmTime);
+					player.ShowScreenMessage(hpMessage() + "\n\n" + Lang.Translate(player, "hit-again-to-repair"), Constants.HammerConfirmTime);
 					lastHammerHit[player] = Time.time;
 					return true;
 				}
@@ -372,26 +372,27 @@ namespace Oxide.Plugins
 		{
 			Utility.Timer = timer;
 
+			Config.Settings.AddConverters();
+			permission.RegisterPermission(Constants.UsePermission, this);
+			lang.RegisterMessages(Lang.DefaultMessages, this, "en");
+
+			UiManager.Initialize();
+			Lang.Initialize(this, lang);
+			FxManager.Initialize();
+
 			foreach (var itemAmount in Utility.Config.UpgradeCost)
 			{
 				var itemDef = ItemManager.FindItemDefinition(itemAmount.Shortname);
 
 				if (itemDef == null)
 				{
-					PrintError("Could not find item with the shortname: '" + itemAmount.Shortname + "', skipping this ingredient!");
+					PrintError(Lang.Translate(null, "item-notfound-skipping-ingredient", itemAmount.Shortname));
 					continue;
 				}
 
 				UpgradeCost.Add(new ItemAmount(itemDef, itemAmount.Amount));
 			}
-
-			Config.Settings.AddConverters();
-			permission.RegisterPermission(Constants.UsePermission, this);
-			lang.RegisterMessages(Lang.DefaultMessages, this, "en");
 			
-			UiManager.Initialize();
-			Lang.Initialize(this, lang);
-			FxManager.Initialize();
 			CrafterManager.Initialize();
 			CrafterManager.Load();
 
@@ -460,7 +461,7 @@ namespace Oxide.Plugins
 
 					string ingredientsStr = builder.ToString();
 
-					player.ShowScreenMessage("You do not have the required ingredients.\nYou need:\n" + ingredientsStr, 10, TextAnchor.MiddleLeft);
+					player.ShowScreenMessage(Lang.Translate(player, "ingredients-missing-youneed") + "\n" + ingredientsStr, 10, TextAnchor.MiddleLeft);
 					return true;
 				}
 			}
@@ -470,7 +471,7 @@ namespace Oxide.Plugins
 			if (Time.time - lastHit > Constants.HammerConfirmTime) // Confirm the upgrade
 			{
 				lastHammerHit[player] = Time.time;
-				player.ShowScreenMessage("Hit again to upgrade to a crafter...", Constants.HammerConfirmTime);
+				player.ShowScreenMessage(Lang.Translate(player, "hammer-confirm-upgrade"), Constants.HammerConfirmTime);
 				return true;
 			}
 			
@@ -498,7 +499,7 @@ namespace Oxide.Plugins
 			if (Time.time - lastRequest > Constants.HammerConfirmTime) // Confirm the downgrade
 			{
 				lastHammerHit[player] = Time.time;
-				player.ShowScreenMessage("Hit again to downgrade to a research table...\n\nItems will not be lost.", Constants.HammerConfirmTime);
+				player.ShowScreenMessage(Lang.Translate(player, "hammer-confirm-downgrade"), Constants.HammerConfirmTime);
 				return true;
 			}
 			

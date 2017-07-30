@@ -83,7 +83,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 				if (baseEntity == null)
 				{
-					Debug.LogWarning("Unable to load crafter; research table or recycler at saved position was not found. (" + position.ToString("0.########") + ")");
+					Utility.LogWarning("Unable to load crafter; research table or recycler at saved position was not found. (" + position.ToString("0.########") + ")");
 					continue;
 				}
 
@@ -147,7 +147,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				++loadedCount;
 			}
 
-			Debug.Log("Loaded " + loadedCount + " crafter(s).");
+			Utility.Log("Loaded " + loadedCount + " crafter(s).");
 		}
 		
 		#endregion

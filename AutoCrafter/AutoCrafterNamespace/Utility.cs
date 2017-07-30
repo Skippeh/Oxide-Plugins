@@ -45,12 +45,22 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 					builder.Append(", ");
 			}
 
-			Debug.Log(builder.ToString());
+			Log(builder.ToString());
 		}
 
 		public static void LogComponents(MonoBehaviour behaviour)
 		{
 			LogComponents(behaviour.gameObject);
+		}
+
+		public static void Log(string str)
+		{
+			Debug.Log("[AutoCrafter] " + str);
+		}
+
+		public static void LogWarning(string str)
+		{
+			Debug.LogWarning("[AutoCrafter] " + str);
 		}
 	}
 }

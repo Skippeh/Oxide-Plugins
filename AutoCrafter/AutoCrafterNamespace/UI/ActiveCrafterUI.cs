@@ -47,7 +47,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace.UI
 				},
 				Text =
 				{
-					Text = "Crafter active",
+					Text = Lang.Translate(null, "crafter-inrange"),
 					Color = "0.9 0.9 0.9 1",
 					FontSize = 12,
 					Align = TextAnchor.MiddleCenter
