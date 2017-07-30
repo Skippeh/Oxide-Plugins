@@ -102,6 +102,12 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		[JsonProperty("On")]
 		private bool _turnedOn => Recycler.IsOn();
 
+		[JsonProperty("Health")]
+		private float _health => Recycler.Health();
+
+		[JsonProperty("DecayTimer")]
+		private float _decayTimer => (float) (typeof (DecayEntity).GetField("decayTimer", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(Recycler) ?? 0f);
+
 		#endregion
 
 		public event PlayerEnterDelegate PlayerEnter;
@@ -155,6 +161,24 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			for (int i = 0; i < Recycler.baseProtection.amounts.Length; ++i)
 			{
 				Recycler.baseProtection.amounts[i] = Utility.Config.CrafterProtectionProperties[i];
+			}
+
+			// Set up decay
+			var researchPrefab = GameManager.server.FindPrefab(Constants.DeployedResearchTablePrefab); // Copying decay settings from research table
+
+			if (researchPrefab == null)
+			{
+				Debug.LogWarning("Could not find research table prefab, skipping decay setup");
+			}
+			else
+			{
+				uint prefabID = researchPrefab.GetComponent<BaseEntity>().prefabID;
+				var decay = PrefabAttribute.server.Find<Decay>(prefabID);
+				var decayPoints = PrefabAttribute.server.FindAll<DecayPoint>(prefabID);
+
+				typeof (DecayEntity).GetField("decay", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Recycler, decay);
+				typeof (DecayEntity).GetField("decayPoints", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Recycler, decayPoints);
+				BuildingManager.DecayEntities.Add(Recycler);
 			}
 		}
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using Apex;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -135,8 +136,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 					item.MoveToContainer(crafter.OutputInventory, index);
 				}
 
+				// Restore on/off state
 				if (jCrafter["On"].ToObject<bool>())
 					crafter.Recycler.StartRecycling();
+
+				// Restore hp and decay
+				crafter.Recycler.health = Mathf.Clamp(jCrafter["Health"].ToObject<float>(), 0, crafter.Recycler.MaxHealth());
+				typeof (DecayEntity).GetField("decayTimer", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(crafter.Recycler, jCrafter["DecayTimer"].ToObject<float>());
 
 				++loadedCount;
 			}
