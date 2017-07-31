@@ -122,6 +122,19 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 					
 					var task = crafter.AddCraftTask(blueprint, amount, skin, false);
 					task.Elapsed = jTask["Elapsed"].ToObject<float>();
+
+					// Restore taken items
+					var jTakenItems = jTask["TakenItems"].Value<JArray>();
+
+					foreach (var jItem in jTakenItems)
+					{
+						int itemID = jItem["itemid"].ToObject<int>();
+						int amount2 = jItem["amount"].ToObject<int>();
+						ulong skin2 = jItem["skin"].ToObject<ulong>();
+
+						var item = ItemManager.CreateByItemID(itemID, amount2, skin2);
+						task.TakenItems.Add(item);
+					}
 				}
 
 				// Restore output container

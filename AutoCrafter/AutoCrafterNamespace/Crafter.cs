@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -24,6 +25,17 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 			[JsonProperty("ItemID")]
 			private int _itemid => Blueprint.targetItem.itemid;
+
+			[JsonIgnore]
+			public List<Item> TakenItems { get; set; } = new List<Item>();
+
+			[JsonProperty("TakenItems")]
+			private object _takenItems => TakenItems.Select(item => new
+			{
+				item.info.itemid,
+				item.skin,
+				item.amount
+			}).ToList();
 
 			/// <summary>
 			/// Number of seconds this has been crafting for.
@@ -535,7 +547,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		#region Public api methods
 
-		public CraftTask AddCraftTask(ItemBlueprint blueprint, int amount, int skinId = 0, bool startRecycler = true)
+		public CraftTask AddCraftTask(ItemBlueprint blueprint, int amount, int skinId = 0, bool startRecycler = true, List<Item> takenItems = null)
 		{
 			bool wasEmpty = CraftingTasks.Count == 0;
 
@@ -560,6 +572,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				CraftingTasks.Add(craftTask);
 			}
 
+			if (takenItems != null)
+				craftTask.TakenItems.AddRange(takenItems);
+
 			foreach (var player in NearbyPlayers)
 			{
 				SendAddCraftingTask(player, craftTask);
@@ -576,7 +591,7 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 
 		public void AddCraftTask(ItemCraftTask task)
 		{
-			AddCraftTask(task.blueprint, task.amount, task.skinID);
+			AddCraftTask(task.blueprint, task.amount, task.skinID, true, task.takenItems);
 		}
 
 		/// <summary>
@@ -599,38 +614,13 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			{
 				SendRemoveCraftingTask(player, task);
 			}
-
-			var refundItems = task.Blueprint.ingredients;
-
-			// List of items that couldn't fit in player inventory
-			List<Item> overflow = new List<Item>();
-
-			foreach (var itemAmount in refundItems)
+			
+			foreach (var item in task.TakenItems)
 			{
-				int amount = (int) itemAmount.amount * task.Amount;
-
-				while (amount > 0)
+				if (!item.MoveToContainer(refundTo.inventory.containerMain) && !item.MoveToContainer(refundTo.inventory.containerBelt))
 				{
-					var item = ItemManager.CreateByItemID(itemAmount.itemid, Math.Min((int) amount, itemAmount.itemDef.stackable));
-					amount -= item.amount;
-
-					if (!item.MoveToContainer(refundTo.inventory.containerMain) && !item.MoveToContainer(refundTo.inventory.containerBelt))
-					{
-						overflow.Add(item);
-					}
+					item.Drop(refundTo.GetDropPosition(), refundTo.GetDropVelocity(), Quaternion.identity);
 				}
-			}
-
-			if (overflow.Count > 0)
-			{
-				Utility.Log("Overflow:");
-
-				foreach (var item in overflow)
-				{
-					Utility.Log("- " + item.amount + "x " + item.info.displayName.english);
-				}
-
-				DumpContainer(refundTo.ServerPosition, Quaternion.identity, overflow);
 			}
 			
 			// Stop recycler if crafting queue is empty.
@@ -737,24 +727,6 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 			}
 
 			return container;
-		}
-
-		private void DumpContainer(Vector3 position, Quaternion rotation, List<Item> items)
-		{
-			ItemContainer inventory;
-			DroppedItemContainer container = CreateItemContainer(position, rotation, "test", out inventory);
-			inventory.capacity = 36;
-
-			foreach (var item in items.ToList())
-			{
-				items.Remove(item);
-
-				if (!item.MoveToContainer(inventory))
-				{
-					DumpContainer(position, rotation, items);
-					break;
-				}
-			}
 		}
 	}
 }
