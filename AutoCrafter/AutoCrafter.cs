@@ -637,7 +637,7 @@ namespace Oxide.Plugins
 
 		private void ShowJoinMessage(BasePlayer player)
 		{
-			if (introducedPlayers.Contains(player.userID))
+			if (introducedPlayers.Contains(player.userID) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission))
 				return;
 
 			string message = Lang.Translate(player, "join-message");
