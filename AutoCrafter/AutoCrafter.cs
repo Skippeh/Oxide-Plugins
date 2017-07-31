@@ -204,10 +204,7 @@ namespace Oxide.Plugins
 		{
 			if (!serverInitialized) // Check if server is initialized. This hook tends to call on startup before OnServerInitialized has been called.
 				return;
-
-			if (!Utility.Config.ShowPlayerInstructionsOnFirstJoin)
-				return;
-
+			
 			ShowJoinMessage(player);
 		}
 
@@ -476,6 +473,25 @@ namespace Oxide.Plugins
 			return null;
 		}
 
+		void OnUserPermissionGranted(string id, string perm)
+		{
+			if (perm == Constants.UsePermission)
+			{
+				ShowJoinMessage(BasePlayer.Find(id));
+			}
+		}
+
+		void OnGroupPermissionGranted(string name, string perm)
+		{
+			if (perm == Constants.UsePermission)
+			{
+				foreach (var player in BasePlayer.activePlayerList)
+				{
+					ShowJoinMessage(player);
+				}
+			}
+		}
+
 		#endregion
 
 		#region Chat commands
@@ -643,7 +659,7 @@ namespace Oxide.Plugins
 
 		private void ShowJoinMessage(BasePlayer player)
 		{
-			if (introducedPlayers.Contains(player.userID) || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission))
+			if (!Utility.Config.ShowPlayerInstructionsOnFirstJoin || !permission.UserHasPermission(player.UserIDString, Constants.UsePermission) || introducedPlayers.Contains(player.userID))
 				return;
 
 			string message = Lang.Translate(player, "join-message");
