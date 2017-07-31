@@ -204,9 +204,9 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 				CrafterManager.DestroyCrafter(this, false, destroyOutputContainer: false); // Don't destroy output container because it's already destroyed.
 			}
 
-			ProcessQueue(elapsed);
 			ProcessWorldItems();
 			ProcessNearbyPlayers();
+			ProcessQueue(elapsed);
 			ProcessUiUpdates();
 		}
 		
