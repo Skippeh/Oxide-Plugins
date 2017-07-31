@@ -491,7 +491,12 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 		{
 			var lookup = GetTaskLookupDict(player);
 			int taskUID = lookup[task];
-			player.Command("note.craft_start", taskUID, task.Blueprint.time - task.Elapsed, task.Amount);
+			float time = task.Blueprint.time - task.Elapsed;
+
+			if (!Recycler.IsOn())
+				time = (float) Math.Ceiling(time) - 0.01f;
+
+			player.Command("note.craft_start", taskUID, time, task.Amount);
 		}
 
 		private void SendCraftingTaskProgress(BasePlayer player, CraftTask task)
