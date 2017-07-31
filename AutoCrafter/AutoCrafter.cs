@@ -330,7 +330,9 @@ namespace Oxide.Plugins
 			// Check permission and if the entity owner is the current player.
 			if (!permission.UserHasPermission(player.UserIDString, Constants.UsePermission) || entity.OwnerID != player.userID)
 			{
-				player.ShowScreenMessage(hpMessage(), 2);
+				if (recycler != null && CrafterManager.ContainsRecycler(recycler))
+					player.ShowScreenMessage(hpMessage(), 2);
+
 				return null;
 			}
 			
