@@ -483,6 +483,12 @@ namespace Oxide.Plugins
 		[ChatCommand("autocrafter")]
 		private void ChatCmd_Autocrafter(BasePlayer player, string command, string[] args)
 		{
+			if (!permission.UserHasPermission(player.UserIDString, Constants.UsePermission))
+			{
+				player.TranslatedChatMessage("nopermission");
+				return;
+			}
+
 			string submenu = args.FirstOrDefault();
 			StringBuilder message = new StringBuilder();
 			string title = null;
