@@ -441,6 +441,9 @@ namespace Oxide.Plugins
 
 		private void Unload()
 		{
+			if (!serverInitialized) // Check if server is initialized. This hook tends to call on startup before OnServerInitialized has been called.
+				return;
+
 			FxManager.Destroy();
 			CrafterManager.Destroy();
 			UiManager.Destroy();
