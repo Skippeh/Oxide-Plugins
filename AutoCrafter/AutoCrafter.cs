@@ -203,8 +203,11 @@ namespace Oxide.Plugins
 		{
 			if (!serverInitialized) // Check if server is initialized. This hook tends to call on startup before OnServerInitialized has been called.
 				return;
-			
-			ShowJoinMessage(player);
+
+			timer.Once(1, () =>
+			{
+				ShowJoinMessage(player);
+			});
 		}
 
 		// Make sure nothing is clipping into recycler. Pretty hacky method, but the recycler doesn't block things like other deployables.
