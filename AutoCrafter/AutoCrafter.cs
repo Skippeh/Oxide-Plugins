@@ -6,7 +6,6 @@ using UnityEngine;
 using Oxide.Plugins.AutoCrafterNamespace;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
 using Rust;
-using Network = UnityEngine.Network;
 
 namespace Oxide.Plugins
 {

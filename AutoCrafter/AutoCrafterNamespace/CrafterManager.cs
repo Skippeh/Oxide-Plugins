@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using Apex;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
 using Oxide.Plugins.AutoCrafterNamespace.UI;

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Oxide.Core.Plugins;
 using UnityEngine;
 
 namespace Oxide.Plugins.AutoCrafterNamespace

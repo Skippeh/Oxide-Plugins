@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Oxide.Game.Rust.Cui;
 
 namespace Oxide.Plugins.AutoCrafterNamespace.UI

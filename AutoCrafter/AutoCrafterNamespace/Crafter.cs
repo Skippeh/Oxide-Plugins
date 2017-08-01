@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Oxide.Plugins.AutoCrafterNamespace.Extensions;
-using Oxide.Plugins.AutoCrafterNamespace.UI;
-using Rust;
 using UnityEngine;
 
 namespace Oxide.Plugins.AutoCrafterNamespace
