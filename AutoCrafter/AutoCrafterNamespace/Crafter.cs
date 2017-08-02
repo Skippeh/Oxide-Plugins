@@ -302,6 +302,26 @@ namespace Oxide.Plugins.AutoCrafterNamespace
 					currentTask.Amount -= 1;
 					currentTask.Elapsed -= currentTask.Blueprint.time;
 
+					// Take used items
+					foreach (var ingredient in currentTask.Blueprint.ingredients)
+					{
+						foreach (var taskItem in currentTask.TakenItems)
+						{
+							if (taskItem.info.itemid != ingredient.itemid)
+								continue;
+
+							taskItem.amount -= (int) ingredient.amount;
+
+							if (taskItem.amount <= 0)
+							{
+								taskItem.Remove();
+								currentTask.TakenItems.Remove(taskItem);
+							}
+
+							break;
+						}
+					}
+
 					if (currentTask.Amount <= 0)
 					{
 						// Remove from ui
