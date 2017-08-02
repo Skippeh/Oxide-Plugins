@@ -9,7 +9,7 @@ using Rust;
 
 namespace Oxide.Plugins
 {
-	[Info("AutoCrafter", "Skipcast", "1.0.2", ResourceId = 2582)]
+	[Info("AutoCrafter", "Skipcast", "1.0.3", ResourceId = 2582)]
 	[Description("A machine that automatically crafts items so the player can do more interesting stuff instead.")]
 	public class AutoCrafter : RustPlugin
 	{
