@@ -505,8 +505,8 @@ namespace Oxide.Plugins
 			
 			foreach (var fuelItem in playerFuel)
 			{
-				if (oven.inventory.CanAcceptItem(fuelItem) != ItemContainer.CanAcceptResult.CanAccept)
-					break;
+			    if (oven.inventory.CanAcceptItem(fuelItem, -1) != ItemContainer.CanAcceptResult.CanAccept)
+			        break;
 
 				var largestFuelStack = oven.inventory.itemList.Where(item => item.info == oven.fuelType).OrderByDescending(item => item.amount).FirstOrDefault();
 				var toTake = Math.Min(neededFuel, oven.fuelType.stackable - (largestFuelStack?.amount ?? 0));
