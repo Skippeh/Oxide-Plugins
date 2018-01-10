@@ -122,7 +122,9 @@ namespace Oxide.Plugins
 			"furnace.large",
 			"campfire",
 			"refinery_small_deployed",
-			"hobobarrel_static"
+			"hobobarrel_static",
+			"bbq.deployed",
+			"fireplace.deployed"
 		};
 		
 		private void OnPlayerDisconnected(BasePlayer player, string reason)
@@ -220,7 +222,9 @@ namespace Oxide.Plugins
 				{"furnace.large", 15},
 				{"campfire", 2},
 				{"refinery_small_deployed", 4},
-				{"hobobarrel_static", 2}
+				{"hobobarrel_static", 2},
+				{"bbq.deployed", 9},
+				{"fireplace.deployed", 2}
 			};
 
 			var options = allPlayerOptions[player.userID];
